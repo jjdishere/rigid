@@ -30,15 +30,18 @@ Reuse `MvPowerSeries.IsRestricted` from mathlib for the underlying restricted po
 1. Define coordinates and the Gauss norm. **Done** (`TateAlgebra/Basic`, `TateAlgebra/GaussNorm`).
 2. Construct the normed commutative `K`-algebra structure. **Done** (`TateAlgebra/NormedRing`).
 3. Prove the ultrametric inequality (**done**), completeness (**done**, `TateAlgebra/Complete`;
-   finiteness of the variable set was not needed), and multiplicativity of the Gauss norm.
+   finiteness of the variable set was not needed), and multiplicativity of the Gauss norm
+   (**done**, `TateAlgebra/Multiplicative`).
 4. Prove density of polynomials and the universal property for tuples of norm at most one.
    **Done** (`TateAlgebra/NormedRing`, `TateAlgebra/UniversalProperty`); neither completeness of `K`
    nor finiteness of the variable set was needed.
 5. Extend the universal property from tuples of norm at most one to power-bounded tuples.
 6. Generalize to positive polyradii only after the strict unit-radius API is stable.
 
-The multiplicativity proof is the first substantial algebraic milestone. It will likely need a
-carefully chosen maximal coefficient argument rather than only generic norm estimates.
+The multiplicativity proof uses the largest norm-attaining coefficient for a monomial order. In the
+coefficient of the product at the sum of the two leading exponents, the product of the leading
+coefficients is the unique summand of maximal norm, so the nonarchimedean triangle inequality
+prevents cancellation.
 
 The universal property required a correction to the challenge statement: the codomain must be a
 `NormedCommRing` rather than a `SeminormedCommRing`. Uniqueness genuinely needs the codomain to be
@@ -153,6 +156,7 @@ canonical theorem statement.
 Rigid/
   TateAlgebra/Basic.lean
   TateAlgebra/GaussNorm.lean
+  TateAlgebra/Multiplicative.lean
   TateAlgebra/UniversalProperty.lean
   AffinoidAlgebra/Basic.lean
   AffinoidAlgebra/Localization.lean

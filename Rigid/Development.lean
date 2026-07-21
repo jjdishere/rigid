@@ -6,6 +6,7 @@ import Rigid.AffinoidAlgebra.QuotientTopology
 import Rigid.AffinoidAlgebra.RationalDatum
 import Rigid.TateAlgebra.Complete
 import Rigid.TateAlgebra.Noetherian
+import Rigid.TateAlgebra.Multiplicative
 import Rigid.TateAlgebra.UniversalProperty
 
 set_option linter.style.header false
@@ -91,7 +92,8 @@ theorem norm_eq_sSup_coeff (f : TateAlgebra K ι) :
   Rigid.norm_eq_sSup_coeff K ι f
 
 /-- The Gauss norm is multiplicative over a nonarchimedean field. -/
-theorem norm_mul (f g : TateAlgebra K ι) : ‖f * g‖ = ‖f‖ * ‖g‖ := sorry
+theorem norm_mul (f g : TateAlgebra K ι) : ‖f * g‖ = ‖f‖ * ‖g‖ :=
+  Rigid.TateAlgebra.norm_mul f g
 
 /-- The universal property of the strict Tate algebra.
 
