@@ -170,6 +170,11 @@ to the quotient norm. -/
 theorem isEquivalentQuotientNorm_of_surjective (f : B →L[K] C) (hf : Function.Surjective f) :
     IsEquivalentQuotientNorm (f : B → C) := sorry
 
+/-- For a continuous linear map between Banach spaces, equivalence with the quotient norm is
+precisely surjectivity. -/
+theorem isEquivalentQuotientNorm_iff_surjective (f : B →L[K] C) :
+    IsEquivalentQuotientNorm (f : B → C) ↔ Function.Surjective f := sorry
+
 /-- A surjective continuous algebra homomorphism between Banach algebras gives an equivalent
 quotient norm on its target. -/
 theorem isEquivalentQuotientNorm_of_surjective_continuousAlgHom
@@ -177,6 +182,14 @@ theorem isEquivalentQuotientNorm_of_surjective_continuousAlgHom
     {C : Type w} [NormedCommRing C] [NormedAlgebra K C] [CompleteSpace C]
     (f : ContinuousAlgHom K B C) (hf : Function.Surjective f) :
     IsEquivalentQuotientNorm (f : B → C) := sorry
+
+/-- For a continuous homomorphism between Banach algebras, equivalence with the quotient norm is
+precisely surjectivity. -/
+theorem isEquivalentQuotientNorm_continuousAlgHom_iff_surjective
+    {B : Type v} [NormedCommRing B] [NormedAlgebra K B] [CompleteSpace B]
+    {C : Type w} [NormedCommRing C] [NormedAlgebra K C] [CompleteSpace C]
+    (f : ContinuousAlgHom K B C) :
+    IsEquivalentQuotientNorm (f : B → C) ↔ Function.Surjective f := sorry
 
 end OpenMapping
 
