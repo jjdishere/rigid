@@ -8,7 +8,8 @@ The first pass will treat a complete nontrivially normed field `K` with
 - Tate algebras initially have finitely many variables and unit polyradius.
 - A strict affinoid algebra is a `K`-algebra isomorphic to a quotient of a Tate algebra; no norm or
   topology is part of the affinoidness predicate.
-- Berkovich points are contractive multiplicative real-valued seminorms extending the norm on `K`.
+- The Berkovich spectrum of a normed ring consists of contractive multiplicative real-valued
+  seminorms; it does not depend on a choice of ground field.
 - Global spaces and morphisms will be built only after the affinoid theory and its sheaf theorem are
   available.
 - `Rigid/Challenge.lean` is a standalone specification file. It has only mathlib imports and keeps
