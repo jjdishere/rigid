@@ -746,7 +746,8 @@ theorem nonempty_berkovichSpectrum_of_isUltrametric
 /-- The Berkovich spectrum of a nonzero complete commutative normed ring is nonempty. -/
 theorem nonempty_berkovichSpectrum_of_complete
     (R : Type v) [NormedCommRing R] [CompleteSpace R] [Nontrivial R] :
-    Nonempty (BerkovichSpectrum R) := sorry
+    Nonempty (BerkovichSpectrum R) :=
+  (Rigid.BerkovichSpectrum.nonempty_of_nontrivial R).map fun x ↦ ⟨x.seminorm, x.le_norm'⟩
 
 /-- The Berkovich spectrum of a nonzero affinoid algebra is nonempty. -/
 theorem nonempty_berkovichSpectrum [Nontrivial A] (hA : IsAffinoidAlgebra K A) :
