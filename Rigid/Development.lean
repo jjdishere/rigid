@@ -543,34 +543,39 @@ theorem isAffinoidAlgebra_rationalLocalization (hA : IsAffinoidAlgebra K A)
     (n : ℕ) (g : A) (f : Fin n → A) :
     IsAffinoidAlgebra K (RationalLocalization K A n g f) := sorry
 
-/-- A point of the Berkovich spectrum of `A`: a bounded multiplicative seminorm extending the norm
-on `K`. The bound is normalized to be contractive. -/
-structure BerkovichSpectrum where
-  seminorm : MulRingSeminorm A
-  map_algebraMap' : ∀ x : K, seminorm (algebraMap K A x) = ‖x‖
-  le_norm' : ∀ a : A, seminorm a ≤ ‖a‖
+section BerkovichSpectrum
 
-instance berkovichSpectrumCoeFun : CoeFun (BerkovichSpectrum K A) (fun _ ↦ A → ℝ) :=
+variable (R : Type v) [NormedRing R]
+
+/-- A point of the Berkovich spectrum of a normed ring: a multiplicative seminorm bounded by the
+ring norm. The bound is normalized to be contractive. -/
+structure BerkovichSpectrum where
+  seminorm : MulRingSeminorm R
+  le_norm' : ∀ a : R, seminorm a ≤ ‖a‖
+
+instance berkovichSpectrumCoeFun : CoeFun (BerkovichSpectrum R) (fun _ ↦ R → ℝ) :=
   ⟨fun x ↦ x.seminorm⟩
 
-/-- The weakest topology for which evaluation at every element of `A` is continuous. -/
+/-- The weakest topology for which evaluation at every element of the ring is continuous. -/
 noncomputable instance berkovichSpectrumTopologicalSpace :
-    TopologicalSpace (BerkovichSpectrum K A) := sorry
+    TopologicalSpace (BerkovichSpectrum R) := sorry
 
 /-- Convergence in the Berkovich spectrum is pointwise convergence of seminorms. -/
-theorem tendsto_iff_eval {l : Filter (BerkovichSpectrum K A)} {x : BerkovichSpectrum K A} :
-    Tendsto id l (𝓝 x) ↔ ∀ a : A, Tendsto (fun y ↦ y a) l (𝓝 (x a)) := sorry
+theorem tendsto_iff_eval {l : Filter (BerkovichSpectrum R)} {x : BerkovichSpectrum R} :
+    Tendsto id l (𝓝 x) ↔ ∀ a : R, Tendsto (fun y ↦ y a) l (𝓝 (x a)) := sorry
+
+/-- The Berkovich spectrum is Hausdorff. -/
+noncomputable instance berkovichSpectrumT2Space : T2Space (BerkovichSpectrum R) := sorry
+
+end BerkovichSpectrum
 
 /-- The Berkovich spectrum of a nonzero affinoid algebra is nonempty. -/
 theorem nonempty_berkovichSpectrum [Nontrivial A] (hA : IsAffinoidAlgebra K A) :
-    Nonempty (BerkovichSpectrum K A) := sorry
+    Nonempty (BerkovichSpectrum A) := sorry
 
 /-- The Berkovich spectrum of an affinoid algebra is compact. -/
 theorem isCompact_univ_berkovichSpectrum (hA : IsAffinoidAlgebra K A) :
-    IsCompact (Set.univ : Set (BerkovichSpectrum K A)) := sorry
-
-/-- The Berkovich spectrum is Hausdorff. -/
-noncomputable instance berkovichSpectrumT2Space : T2Space (BerkovichSpectrum K A) := sorry
+    IsCompact (Set.univ : Set (BerkovichSpectrum A)) := sorry
 
 end AffinoidAlgebra
 
