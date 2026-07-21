@@ -110,8 +110,7 @@ geometric objects.
 2. Prove nonemptiness, compactness, and Hausdorffness. Compactness and Hausdorffness are **done**
    for every normed ring; nonemptiness for nonzero complete commutative normed rings remains open.
 3. Develop pointwise evaluation, prime kernels, and contravariance. The basic evaluation, kernel,
-   and norm-nonincreasing pullback APIs are **done**; nonarchimedeanity of points over a
-   nonarchimedean commutative normed ring remains a target.
+   norm-nonincreasing pullback, and nonarchimedeanity APIs are **done**.
 4. Define completed residue fields and evaluation maps.
 5. Define affinoid domains and analytic functions.
 6. Build Berkovich spaces from affinoid atlases, then define good, strict, Hausdorff, and
@@ -177,7 +176,6 @@ replace only the corresponding sorried Development body.
 
 ## Near-term milestone
 
-Finish the elementary Berkovich spectrum by proving that bounded multiplicative seminorms over a
-nonarchimedean normed ring are nonarchimedean and that the spectrum of a nonzero complete
+Finish the elementary Berkovich spectrum by proving that the spectrum of a nonzero complete
 commutative normed ring is nonempty. In parallel, continue the affinoid quotient and rational
 localization foundations needed for analytic domains.

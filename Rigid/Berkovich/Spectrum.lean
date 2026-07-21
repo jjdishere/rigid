@@ -1,4 +1,6 @@
+import Mathlib.Analysis.Normed.Group.Ultra
 import Mathlib.Analysis.Normed.Unbundled.RingSeminorm
+import Mathlib.Analysis.SpecificLimits.Normed
 import Mathlib.Topology.Algebra.Ring.Basic
 import Mathlib.Topology.Compactness.Compact
 import Mathlib.Topology.Maps.Basic
@@ -10,7 +12,8 @@ set_option linter.style.header false
 
 The Berkovich spectrum of a normed ring consists of the multiplicative real-valued seminorms
 bounded by the ring norm. It carries the topology of pointwise convergence. This file develops the
-elementary evaluation, separation, kernel, and compactness API. Nonemptiness for nonzero complete
+elementary evaluation, separation, kernel, and compactness API. It also proves that every point over
+a nonarchimedean commutative normed ring is nonarchimedean. Nonemptiness for nonzero complete
 commutative normed rings is a deeper result and is left to a later file.
 -/
 
@@ -216,6 +219,75 @@ theorem isCompact_univ : IsCompact (Set.univ : Set (BerkovichSpectrum R)) := by
 
 noncomputable instance berkovichSpectrumCompactSpace : CompactSpace (BerkovichSpectrum R) :=
   isCompact_univ_iff.mp (isCompact_univ R)
+
+private theorem apply_sum_le_sum {S : Type u} [NormedRing S]
+    (x : BerkovichSpectrum S) {ι : Type v} (s : Finset ι) (f : ι → S) :
+    x (∑ i ∈ s, f i) ≤ ∑ i ∈ s, x (f i) := by
+  classical
+  induction s using Finset.induction with
+  | empty => simp
+  | @insert i s hi ih =>
+    simp only [Finset.sum_insert hi]
+    exact (map_add_le S x (f i) (∑ j ∈ s, f j)).trans (add_le_add_right ih _)
+
+private theorem norm_natCast_le_norm_one {S : Type u} [NormedRing S] [IsUltrametricDist S]
+    (n : ℕ) : ‖(n : S)‖ ≤ ‖(1 : S)‖ := by
+  induction n with
+  | zero => simp
+  | succ n ih =>
+    rw [Nat.cast_succ]
+    exact (IsUltrametricDist.norm_add_le_max (n : S) 1).trans (max_le ih le_rfl)
+
+/-- A bounded multiplicative seminorm on a nonarchimedean commutative normed ring is
+nonarchimedean. -/
+theorem map_add_le_max {S : Type u} [NormedCommRing S] [IsUltrametricDist S]
+    (x : BerkovichSpectrum S) (a b : S) : x (a + b) ≤ max (x a) (x b) := by
+  classical
+  let M := max (x a) (x b)
+  let T := x (a + b)
+  let C := ‖(1 : S)‖
+  have hM : 0 ≤ M := (nonneg S x a).trans (le_max_left _ _)
+  by_contra! hMT
+  have hT : 0 < T := hM.trans_lt hMT
+  have hr0 : 0 ≤ M / T := div_nonneg hM hT.le
+  have hr1 : M / T < 1 := (div_lt_one hT).2 hMT
+  have hgeom : Tendsto (fun n : ℕ ↦ ((n : ℝ) + 1) * (M / T) ^ n) atTop (𝓝 0) := by
+    simpa [add_mul] using (tendsto_self_mul_const_pow_of_lt_one hr0 hr1).add
+      (tendsto_pow_atTop_nhds_zero_of_lt_one hr0 hr1)
+  have hlim : Tendsto (fun n : ℕ ↦ C * (((n : ℝ) + 1) * (M / T) ^ n)) atTop (𝓝 0) := by
+    simpa using hgeom.const_mul C
+  obtain ⟨n, hn⟩ := (hlim.eventually_lt_const zero_lt_one).exists
+  have hpow : T ^ n ≤ ((n : ℝ) + 1) * (M ^ n * C) := by
+    calc
+      T ^ n = x ((a + b) ^ n) := by simp [T]
+      _ = x (∑ m ∈ Finset.range (n + 1),
+          a ^ m * b ^ (n - m) * (n.choose m : S)) := by rw [add_pow]
+      _ ≤ ∑ m ∈ Finset.range (n + 1),
+          x (a ^ m * b ^ (n - m) * (n.choose m : S)) :=
+        apply_sum_le_sum x _ _
+      _ ≤ ∑ _m ∈ Finset.range (n + 1), M ^ n * C := by
+        apply Finset.sum_le_sum
+        intro m hm
+        have hmn : m ≤ n := Nat.lt_succ_iff.mp (Finset.mem_range.mp hm)
+        have hc : x (n.choose m : S) ≤ C :=
+          (le_norm S x _).trans (norm_natCast_le_norm_one (n.choose m))
+        calc
+          x (a ^ m * b ^ (n - m) * (n.choose m : S)) =
+              x a ^ m * x b ^ (n - m) * x (n.choose m : S) := by simp
+          _ ≤ M ^ m * M ^ (n - m) * C := by
+            gcongr
+            · exact le_max_left _ _
+            · exact le_max_right _ _
+          _ = M ^ n * C := by rw [← pow_add, Nat.add_sub_of_le hmn]
+      _ = ((n : ℝ) + 1) * (M ^ n * C) := by simp [nsmul_eq_mul]
+  have hfactor : ((n : ℝ) + 1) * (M ^ n * C) =
+      T ^ n * (C * (((n : ℝ) + 1) * (M / T) ^ n)) := by
+    rw [div_pow]
+    field_simp
+  have hlt : ((n : ℝ) + 1) * (M ^ n * C) < T ^ n := by
+    rw [hfactor]
+    exact mul_lt_of_lt_one_right (pow_pos hT n) hn
+  exact (not_lt_of_ge hpow) hlt
 
 end BerkovichSpectrum
 

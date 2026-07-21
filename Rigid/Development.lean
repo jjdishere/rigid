@@ -731,7 +731,9 @@ namespace BerkovichSpectrum
 /-- A bounded multiplicative seminorm on a nonarchimedean commutative normed ring is
 nonarchimedean. -/
 theorem map_add_le_max {R : Type v} [NormedCommRing R] [IsUltrametricDist R]
-    (x : BerkovichSpectrum R) (a b : R) : x (a + b) ≤ max (x a) (x b) := sorry
+    (x : BerkovichSpectrum R) (a b : R) : x (a + b) ≤ max (x a) (x b) := by
+  simpa [homeomorphRigid] using
+    Rigid.BerkovichSpectrum.map_add_le_max ((homeomorphRigid R).symm x) a b
 
 end BerkovichSpectrum
 
