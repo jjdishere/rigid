@@ -107,8 +107,10 @@ geometric objects.
 
 1. Put the evaluation topology on the Berkovich spectrum of a normed ring. **Done**
    (`Berkovich/Spectrum`).
-2. Prove nonemptiness, compactness, and Hausdorffness. Compactness and Hausdorffness are **done**
-   for every normed ring; nonemptiness for nonzero complete commutative normed rings remains open.
+2. Prove nonemptiness, compactness, and Hausdorffness. **Done** in the nonarchimedean setting:
+   compactness and Hausdorffness hold for every normed ring, while nonemptiness holds for every
+   nonzero nonarchimedean commutative normed ring, without a completeness assumption. The broader
+   nonemptiness theorem for arbitrary commutative Banach rings remains a comparator target.
 3. Develop pointwise evaluation, prime kernels, and contravariance. The basic evaluation, kernel,
    norm-nonincreasing pullback, and nonarchimedeanity APIs are **done**.
 4. Define completed residue fields and evaluation maps.
@@ -161,6 +163,7 @@ Rigid/
   RigidSpace/Basic.lean
   RigidSpace/Gluing.lean
   Berkovich/Spectrum.lean
+  Berkovich/Nonempty.lean
   Berkovich/Space.lean
   Comparison/Affinoid.lean
   Comparison/Global.lean
@@ -176,6 +179,7 @@ replace only the corresponding sorried Development body.
 
 ## Near-term milestone
 
-Finish the elementary Berkovich spectrum by proving that the spectrum of a nonzero complete
-commutative normed ring is nonempty. In parallel, continue the affinoid quotient and rational
-localization foundations needed for analytic domains.
+Extend nonemptiness from nonarchimedean normed rings to arbitrary nonzero commutative Banach rings;
+this requires an ordinary-triangle analogue of the spectral smoothing construction used in the
+nonarchimedean proof. Then define completed residue fields and their evaluation maps. In parallel,
+continue the affinoid quotient and rational localization foundations needed for analytic domains.

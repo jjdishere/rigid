@@ -615,6 +615,11 @@ theorem map_add_le_max {R : Type v} [NormedCommRing R] [IsUltrametricDist R]
 
 end BerkovichSpectrum
 
+/-- The Berkovich spectrum of a nonzero nonarchimedean commutative normed ring is nonempty. -/
+theorem nonempty_berkovichSpectrum_of_isUltrametric
+    (R : Type v) [NormedCommRing R] [IsUltrametricDist R] [Nontrivial R] :
+    Nonempty (BerkovichSpectrum R) := sorry
+
 /-- The Berkovich spectrum of a nonzero complete commutative normed ring is nonempty. -/
 theorem nonempty_berkovichSpectrum_of_complete
     (R : Type v) [NormedCommRing R] [CompleteSpace R] [Nontrivial R] :

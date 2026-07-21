@@ -1,6 +1,6 @@
 import Mathlib
 import Rigid.AffinoidAlgebra.Basic
-import Rigid.Berkovich.Spectrum
+import Rigid.Berkovich.Nonempty
 import Rigid.AffinoidAlgebra.QuotientNorm
 import Rigid.AffinoidAlgebra.QuotientTopology
 import Rigid.AffinoidAlgebra.RationalDatum
@@ -737,6 +737,12 @@ theorem map_add_le_max {R : Type v} [NormedCommRing R] [IsUltrametricDist R]
 
 end BerkovichSpectrum
 
+/-- The Berkovich spectrum of a nonzero nonarchimedean commutative normed ring is nonempty. -/
+theorem nonempty_berkovichSpectrum_of_isUltrametric
+    (R : Type v) [NormedCommRing R] [IsUltrametricDist R] [Nontrivial R] :
+    Nonempty (BerkovichSpectrum R) :=
+  (Rigid.BerkovichSpectrum.nonempty_of_isUltrametric R).map fun x ↦ ⟨x.seminorm, x.le_norm'⟩
+
 /-- The Berkovich spectrum of a nonzero complete commutative normed ring is nonempty. -/
 theorem nonempty_berkovichSpectrum_of_complete
     (R : Type v) [NormedCommRing R] [CompleteSpace R] [Nontrivial R] :
@@ -746,7 +752,7 @@ theorem nonempty_berkovichSpectrum_of_complete
 theorem nonempty_berkovichSpectrum [Nontrivial A] (hA : IsAffinoidAlgebra K A) :
     Nonempty (BerkovichSpectrum A) := by
   rcases hA with ⟨_⟩
-  exact nonempty_berkovichSpectrum_of_complete A
+  exact nonempty_berkovichSpectrum_of_isUltrametric A
 
 /-- The Berkovich spectrum of an affinoid algebra is compact. -/
 theorem isCompact_univ_berkovichSpectrum (hA : IsAffinoidAlgebra K A) :
