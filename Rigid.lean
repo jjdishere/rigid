@@ -1,1 +1,1 @@
-import Rigid.Basic
+import Rigid.Challenge

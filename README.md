@@ -1,5 +1,12 @@
 # rigid
 
+A Lean/mathlib formalization project for rigid analytic geometry, including Tate and affinoid
+algebras, rigid spaces, Berkovich spaces, and their comparison.
+
+The current standalone challenge interface is [`Rigid/Challenge.lean`](Rigid/Challenge.lean). It
+contains the initial definitions and theorem statements with `sorry`. See [`PLAN.md`](PLAN.md) for
+the dependency order, scope decisions, and open questions around the precise comparison theorem.
+
 ## GitHub configuration
 
 To set up your new GitHub repository, follow these steps:
