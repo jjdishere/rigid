@@ -1515,26 +1515,36 @@ end AdmissibleOpen
 namespace StructureSheaf
 
 /-- Analytic functions on an admissible open of a rigid space. -/
-noncomputable def Sections {X : RigidSpace K} (U : AdmissibleOpen K X) : Type u := sorry
+noncomputable abbrev Sections {X : RigidSpace K} (U : AdmissibleOpen K X) : Type u :=
+  X.structurePresheaf.Sections U.down
 
 noncomputable instance sectionsCommRing {X : RigidSpace K} (U : AdmissibleOpen K X) :
-    CommRing (Sections K U) := sorry
+    CommRing (Sections K U) := inferInstance
 
 noncomputable instance sectionsAlgebra {X : RigidSpace K} (U : AdmissibleOpen K X) :
-    Algebra K (Sections K U) := sorry
+    Algebra K (Sections K U) := inferInstance
 
 /-- Restriction of analytic functions. -/
 noncomputable def restriction {X : RigidSpace K} {U V : AdmissibleOpen K X}
-    (hUV : U.carrier ⊆ V.carrier) : Sections K V →ₐ[K] Sections K U := sorry
+    (hUV : U.carrier ⊆ V.carrier) : Sections K V →ₐ[K] Sections K U :=
+  X.structurePresheaf.restriction (by
+    intro x hx
+    have hx' : (⟨x⟩ : Point K X) ∈ U.carrier := hx
+    exact hUV hx')
 
 @[simp]
 theorem restriction_id {X : RigidSpace K} (U : AdmissibleOpen K X) :
-    restriction K (U := U) (V := U) Set.Subset.rfl = AlgHom.id K (Sections K U) := sorry
+    restriction K (U := U) (V := U) Set.Subset.rfl = AlgHom.id K (Sections K U) := by
+  change X.structurePresheaf.restriction _ = AlgHom.id K _
+  exact X.structurePresheaf.restriction_id U.down
 
 @[simp]
 theorem restriction_comp {X : RigidSpace K} {U V W : AdmissibleOpen K X}
     (hUV : U.carrier ⊆ V.carrier) (hWU : W.carrier ⊆ U.carrier) :
-    (restriction K hWU).comp (restriction K hUV) = restriction K (hWU.trans hUV) := sorry
+    (restriction K hWU).comp (restriction K hUV) = restriction K (hWU.trans hUV) := by
+  change (X.structurePresheaf.restriction _).comp (X.structurePresheaf.restriction _) =
+    X.structurePresheaf.restriction _
+  exact X.structurePresheaf.restriction_comp _ _
 
 /-- Compatibility of local sections on an admissible cover. -/
 def IsCompatible {X : RigidSpace K} {ι : Type (u + 1)}
@@ -1548,23 +1558,30 @@ theorem existsUnique_glue {X : RigidSpace K} {ι : Type (u + 1)}
     {U : ι → AdmissibleOpen K X} {V : AdmissibleOpen K X}
     (hU : AdmissibleOpen.IsCover K U V) (s : ∀ i, Sections K (U i))
     (hs : IsCompatible K U s) :
-    ∃! t : Sections K V, ∀ i, restriction K (hU.subset K i) t = s i := sorry
+    ∃! t : Sections K V, ∀ i, restriction K (hU.subset K i) t = s i := by
+  change ∃! t : X.structurePresheaf.Sections V.down, ∀ i,
+    X.structurePresheaf.restriction _ t = s i
+  apply X.isStructureSheaf.isSheaf hU s
+  intro i j
+  exact hs i j
 
 /-- The local ring of germs at an analytic point. -/
-noncomputable def Stalk (X : RigidSpace K) (x : Point K X) : Type u := sorry
+noncomputable abbrev Stalk (X : RigidSpace K) (x : Point K X) : Type u :=
+  X.structurePresheaf.Stalk x.down
 
 noncomputable instance stalkCommRing (X : RigidSpace K) (x : Point K X) :
-    CommRing (Stalk K X x) := sorry
+    CommRing (Stalk K X x) := inferInstance
 
 noncomputable instance stalkAlgebra (X : RigidSpace K) (x : Point K X) :
-    Algebra K (Stalk K X x) := sorry
+    Algebra K (Stalk K X x) := inferInstance
 
 noncomputable instance stalkIsLocalRing (X : RigidSpace K) (x : Point K X) :
-    IsLocalRing (Stalk K X x) := sorry
+    IsLocalRing (Stalk K X x) := X.isStructureSheaf.isLocallyRinged x.down
 
 /-- The germ of a section at a point of its domain. -/
 noncomputable def germ {X : RigidSpace K} {U : AdmissibleOpen K X}
-    {x : Point K X} (hx : x ∈ U.carrier) : Sections K U →ₐ[K] Stalk K X x := sorry
+    {x : Point K X} (hx : x ∈ U.carrier) : Sections K U →ₐ[K] Stalk K X x :=
+  X.structurePresheaf.germ (U := U.down) (x := x.down) hx
 
 end StructureSheaf
 
@@ -1594,53 +1611,171 @@ structure AnalyticMorphismData (X Y : RigidSpace K) where
     stalkMap x (StructureSheaf.germ K hx s) =
       StructureSheaf.germ K ((mem_preimage x U).2 hx) (pullback U s)
 
+private noncomputable def homToAnalyticMorphismData {X Y : RigidSpace K} (f : X ⟶ Y) :
+    AnalyticMorphismData K X Y where
+  base := fun x ↦ ⟨f.base x.down⟩
+  preimage := fun U ↦ ⟨f.preimage U.down⟩
+  mem_preimage := by
+    intro x U
+    exact f.mem_preimage x.down U.down
+  preimage_mono := by
+    intro U V hUV x hx
+    have hraw : (U.down : Set Y.points) ⊆ V.down := by
+      intro y hy
+      have hy' : (⟨y⟩ : Point K Y) ∈ U.carrier := by
+        exact hy
+      exact hUV hy'
+    have hxraw : x.down ∈ (f.preimage U.down : Set X.points) := hx
+    exact f.preimage_mono hraw hxraw
+  pullback := fun U ↦ f.pullback U.down
+  pullback_restriction := by
+    intro U V hUV
+    apply AlgHom.ext
+    intro s
+    exact congr_fun (congrArg DFunLike.coe (f.pullback_restriction (U := U.down) (V := V.down)
+      (by
+        intro y hy
+        have hy' : (⟨y⟩ : Point K Y) ∈ U.carrier := by
+          exact hy
+        exact hUV hy'))) s
+  stalkMap := fun x ↦ f.stalkMap x.down
+  stalkMap_isLocal := fun x ↦ f.stalkMap_isLocal x.down
+  pullback_germ := by
+    intro x U hx s
+    exact f.pullback_germ x.down U.down hx s
+
+private noncomputable def analyticMorphismDataToHom {X Y : RigidSpace K}
+    (f : AnalyticMorphismData K X Y) : Rigid.RigidSpace.Hom K X Y where
+  base := fun x ↦ (f.base ⟨x⟩).down
+  preimage := fun U ↦ (f.preimage ⟨U⟩).down
+  mem_preimage := by
+    intro x U
+    exact f.mem_preimage ⟨x⟩ ⟨U⟩
+  preimage_mono := by
+    intro U V hUV x hx
+    apply f.preimage_mono (U := ⟨U⟩) (V := ⟨V⟩) (by
+      intro y hy
+      exact hUV hy)
+    exact hx
+  pullback := fun U ↦ f.pullback ⟨U⟩
+  pullback_restriction := by
+    intro U V hUV
+    apply AlgHom.ext
+    intro s
+    exact congr_fun (congrArg DFunLike.coe (f.pullback_restriction (U := ⟨U⟩) (V := ⟨V⟩)
+      (by
+        intro y hy
+        exact hUV hy))) s
+  stalkMap := fun x ↦ f.stalkMap ⟨x⟩
+  stalkMap_isLocal := fun x ↦ f.stalkMap_isLocal ⟨x⟩
+  pullback_germ := by
+    intro x U hx s
+    exact f.pullback_germ ⟨x⟩ ⟨U⟩ hx s
+
+private theorem analyticMorphismData_ext {X Y : RigidSpace K}
+    {f g : AnalyticMorphismData K X Y} (hbase : f.base = g.base)
+    (hpreimage : f.preimage = g.preimage) (hpullback : HEq f.pullback g.pullback)
+    (hstalkMap : HEq f.stalkMap g.stalkMap) : f = g := by
+  cases f
+  cases g
+  cases hbase
+  cases hpreimage
+  cases hpullback
+  cases hstalkMap
+  rfl
+
 namespace AnalyticMorphismData
 
 /-- Identity analytic-morphism data. -/
-noncomputable def id (X : RigidSpace K) : AnalyticMorphismData K X X := sorry
+noncomputable def id (X : RigidSpace K) : AnalyticMorphismData K X X :=
+  homToAnalyticMorphismData K (𝟙 X)
 
 /-- Composition of analytic-morphism data. -/
 noncomputable def comp {X Y Z : RigidSpace K}
     (f : AnalyticMorphismData K X Y) (g : AnalyticMorphismData K Y Z) :
-    AnalyticMorphismData K X Z := sorry
+    AnalyticMorphismData K X Z :=
+  homToAnalyticMorphismData K (analyticMorphismDataToHom K f ≫ analyticMorphismDataToHom K g)
 
 @[simp]
-theorem id_base (X : RigidSpace K) : (id K X).base = _root_.id := sorry
+theorem id_base (X : RigidSpace K) : (id K X).base = _root_.id := by
+  funext x
+  cases x
+  rfl
 
 @[simp]
 theorem id_preimage (X : RigidSpace K) (U : AdmissibleOpen K X) :
-    (id K X).preimage U = U := sorry
+    (id K X).preimage U = U := by
+  cases U
+  rfl
 
 @[simp]
 theorem comp_base {X Y Z : RigidSpace K}
     (f : AnalyticMorphismData K X Y) (g : AnalyticMorphismData K Y Z) :
-    (comp K f g).base = g.base ∘ f.base := sorry
+    (comp K f g).base = g.base ∘ f.base := by
+  funext x
+  cases x
+  rfl
 
 @[simp]
 theorem comp_preimage {X Y Z : RigidSpace K}
     (f : AnalyticMorphismData K X Y) (g : AnalyticMorphismData K Y Z)
     (U : AdmissibleOpen K Z) :
-    (comp K f g).preimage U = f.preimage (g.preimage U) := sorry
+    (comp K f g).preimage U = f.preimage (g.preimage U) := by
+  cases U
+  rfl
 
 end AnalyticMorphismData
 
 /-- Rigid-space morphisms are exactly compatible locally ringed morphism data. -/
 noncomputable def analyticHomEquiv (X Y : RigidSpace K) :
-    (X ⟶ Y) ≃ AnalyticMorphismData K X Y := sorry
+    (X ⟶ Y) ≃ AnalyticMorphismData K X Y where
+  toFun := homToAnalyticMorphismData K
+  invFun := analyticMorphismDataToHom K
+  left_inv f := by
+    apply Rigid.RigidSpace.Hom.ext
+    · rfl
+    · rfl
+    · apply heq_of_eq
+      rfl
+    · apply heq_of_eq
+      rfl
+  right_inv f := by
+    apply analyticMorphismData_ext
+    · funext x
+      cases x
+      rfl
+    · funext U
+      cases U
+      rfl
+    · apply heq_of_eq
+      funext U
+      cases U
+      rfl
+    · apply heq_of_eq
+      funext x
+      cases x
+      rfl
 
 @[simp]
 theorem analyticHomEquiv_base {X Y : RigidSpace K} (f : X ⟶ Y) :
-    (analyticHomEquiv K X Y f).base = Point.map K f := sorry
+    (analyticHomEquiv K X Y f).base = Point.map K f := rfl
 
 @[simp]
 theorem analyticHomEquiv_id (X : RigidSpace K) :
-    analyticHomEquiv K X X (𝟙 X) = AnalyticMorphismData.id K X := sorry
+    analyticHomEquiv K X X (𝟙 X) = AnalyticMorphismData.id K X := rfl
 
 @[simp]
 theorem analyticHomEquiv_comp {X Y Z : RigidSpace K} (f : X ⟶ Y) (g : Y ⟶ Z) :
     analyticHomEquiv K X Z (f ≫ g) =
       AnalyticMorphismData.comp K (analyticHomEquiv K X Y f)
-        (analyticHomEquiv K Y Z g) := sorry
+        (analyticHomEquiv K Y Z g) := by
+  apply analyticMorphismData_ext
+  · rfl
+  · rfl
+  · apply heq_of_eq
+    rfl
+  · apply heq_of_eq
+    rfl
 /-- An affinoid domain in a rigid space. -/
 def AffinoidDomain (X : RigidSpace K) : Type (u + 1) := sorry
 

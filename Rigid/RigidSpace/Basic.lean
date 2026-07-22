@@ -60,23 +60,154 @@ namespace RigidSpace
 
 variable (K : Type u) [NontriviallyNormedField K] [CompleteSpace K] [IsUltrametricDist K]
 
-/-- A morphism at the point-set layer of rigid spaces. -/
-@[ext]
+/-- A morphism of admissible locally ringed spaces. -/
 structure Hom (X Y : RigidSpace K) : Type (u + 1) where
-  /-- The induced function on analytic points. -/
-  toFun : X.points → Y.points
+  /-- The map on analytic points. -/
+  base : X.points → Y.points
+  /-- Inverse image of each admissible open. -/
+  preimage : Y.admissibleTopology.Open → X.admissibleTopology.Open
+  /-- Membership in an inverse image is detected on points. -/
+  mem_preimage : ∀ x U, x ∈ preimage U ↔ base x ∈ U
+  /-- Inverse image preserves inclusions of admissible opens. -/
+  preimage_mono : ∀ {U V : Y.admissibleTopology.Open}, (U : Set Y.points) ⊆ V →
+    (preimage U : Set X.points) ⊆ preimage V
+  /-- Pullback of analytic sections. -/
+  pullback : ∀ (U : Y.admissibleTopology.Open), Y.structurePresheaf.Sections U →ₐ[K]
+    X.structurePresheaf.Sections (preimage U)
+  /-- Pullback commutes with restriction. -/
+  pullback_restriction : ∀ {U V : Y.admissibleTopology.Open}
+      (hUV : (U : Set Y.points) ⊆ V),
+    (X.structurePresheaf.restriction (preimage_mono hUV)).comp (pullback V) =
+      (pullback U).comp (Y.structurePresheaf.restriction hUV)
+  /-- The induced map on local rings. -/
+  stalkMap : ∀ x, Y.structurePresheaf.Stalk (base x) →ₐ[K]
+    X.structurePresheaf.Stalk x
+  /-- Maps on stalks are local homomorphisms. -/
+  stalkMap_isLocal : ∀ x, IsLocalHom (stalkMap x)
+  /-- Pullback commutes with passage to germs. -/
+  pullback_germ : ∀ (x) (U : Y.admissibleTopology.Open)
+      (hx : base x ∈ (U : Set Y.points))
+      (s : Y.structurePresheaf.Sections U),
+    stalkMap x (Y.structurePresheaf.germ hx s) =
+      X.structurePresheaf.germ ((mem_preimage x U).2 hx) (pullback U s)
 
-instance {X Y : RigidSpace K} : FunLike (Hom K X Y) X.points Y.points where
-  coe := Hom.toFun
-  coe_injective := fun _ _ h ↦ Hom.ext h
+@[ext (iff := false)]
+theorem Hom.ext {X Y : RigidSpace K} {f g : Hom K X Y}
+    (hbase : f.base = g.base) (hpreimage : f.preimage = g.preimage)
+    (hpullback : HEq f.pullback g.pullback) (hstalkMap : HEq f.stalkMap g.stalkMap) : f = g := by
+  cases f
+  cases g
+  cases hbase
+  cases hpreimage
+  cases hpullback
+  cases hstalkMap
+  rfl
 
-instance category : Category.{u + 1} (RigidSpace K) where
+namespace Hom
+
+variable {X Y Z : RigidSpace K}
+
+/-- Identity morphism of admissible locally ringed spaces. -/
+noncomputable def id (X : RigidSpace K) : Hom K X X where
+  base := _root_.id
+  preimage := _root_.id
+  mem_preimage := by intro x U; rfl
+  preimage_mono := by intro U V h; exact h
+  pullback := fun U ↦ AlgHom.id K _
+  pullback_restriction := by
+    intro U V hUV
+    ext s
+    rfl
+  stalkMap := fun x ↦ AlgHom.id K _
+  stalkMap_isLocal := by
+    intro x
+    exact ⟨fun a h ↦ h⟩
+  pullback_germ := by
+    intro x U hx s
+    rfl
+
+/-- Composition of morphisms of admissible locally ringed spaces. -/
+noncomputable def comp (f : Hom K X Y) (g : Hom K Y Z) : Hom K X Z where
+  base := fun x ↦ g.base (f.base x)
+  preimage := fun U ↦ f.preimage (g.preimage U)
+  mem_preimage := by
+    intro x U
+    rw [f.mem_preimage, g.mem_preimage]
+  preimage_mono := by
+    intro U V hUV x hx
+    exact (f.mem_preimage x (g.preimage V)).2
+      ((g.mem_preimage (f.base x) V).2
+        (hUV ((g.mem_preimage (f.base x) U).1
+          ((f.mem_preimage x (g.preimage U)).1 hx))))
+  pullback := fun U ↦ (f.pullback (g.preimage U)).comp (g.pullback U)
+  pullback_restriction := by
+    intro U V hUV
+    let hUV' : U ≤ V := hUV
+    let hg : g.preimage U ≤ g.preimage V := g.preimage_mono hUV'
+    let hf := f.preimage_mono hg
+    rw [← AlgHom.comp_assoc]
+    rw [f.pullback_restriction hg]
+    change (f.pullback (g.preimage U)).comp
+      ((Y.structurePresheaf.restriction hg).comp (g.pullback V)) =
+        (f.pullback (g.preimage U)).comp
+          ((g.pullback U).comp (Z.structurePresheaf.restriction hUV'))
+    rw [g.pullback_restriction hUV']
+  stalkMap := fun x ↦ (f.stalkMap x).comp (g.stalkMap (f.base x))
+  stalkMap_isLocal := by
+    intro x
+    exact ⟨fun a h ↦ (g.stalkMap_isLocal (f.base x)).map_nonunit a
+      ((f.stalkMap_isLocal x).map_nonunit (g.stalkMap (f.base x) a) h)⟩
+  pullback_germ := by
+    intro x U hx s
+    change f.stalkMap x (g.stalkMap (f.base x) (Z.structurePresheaf.germ hx s)) = _
+    rw [g.pullback_germ (f.base x) U hx s]
+    exact f.pullback_germ x (g.preimage U)
+      ((g.mem_preimage (f.base x) U).2 hx) (g.pullback U s)
+
+end Hom
+
+noncomputable instance category : Category.{u + 1} (RigidSpace K) where
   Hom := Hom K
-  id _ := ⟨id⟩
-  comp f g := ⟨g.toFun ∘ f.toFun⟩
-  id_comp _ := rfl
-  comp_id _ := rfl
-  assoc _ _ _ := rfl
+  id := Hom.id K
+  comp := Hom.comp K
+  id_comp f := by
+    apply Hom.ext
+    · funext x; rfl
+    · funext U; rfl
+    · apply heq_of_eq
+      funext U
+      ext s
+      rfl
+    · apply heq_of_eq
+      funext x
+      ext s
+      rfl
+  comp_id f := by
+    apply Hom.ext
+    · funext x; rfl
+    · funext U; rfl
+    · apply heq_of_eq
+      funext U
+      ext s
+      rfl
+    · apply heq_of_eq
+      funext x
+      ext s
+      rfl
+  assoc f g h := by
+    apply Hom.ext
+    · rfl
+    · rfl
+    · apply heq_of_eq
+      funext U
+      apply AlgHom.ext
+      intro s
+      rfl
+    · apply heq_of_eq
+      funext x
+      apply AlgHom.ext
+      intro s
+      rfl
 
 /-- The type of analytic points, lifted to the public universe of the global-space interface. -/
 abbrev Point (X : RigidSpace K) : Type (u + 1) := ULift.{u + 1, u} X.points
@@ -85,7 +216,7 @@ namespace Point
 
 /-- The map on analytic points induced by a rigid-space morphism. -/
 def map {X Y : RigidSpace K} (f : X ⟶ Y) : Point K X → Point K Y :=
-  fun x ↦ ⟨f.toFun x.down⟩
+  fun x ↦ ⟨f.base x.down⟩
 
 @[simp]
 theorem map_id (X : RigidSpace K) : map K (𝟙 X) = id :=

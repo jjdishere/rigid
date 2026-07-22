@@ -16,6 +16,7 @@ import Rigid.Development
 import Rigid.RigidSpace.AdmissibleOpen
 import Rigid.RigidSpace.AdmissibleTopology
 import Rigid.RigidSpace.Basic
+import Rigid.RigidSpace.Morphism
 import Rigid.RigidSpace.StructureSheaf
 import Rigid.TateAlgebra.Basic
 import Rigid.TateAlgebra.Complete
