@@ -11,6 +11,7 @@ import Rigid.AffinoidAlgebra.QuotientNorm
 import Rigid.AffinoidAlgebra.QuotientTopology
 import Rigid.AffinoidAlgebra.RationalDatum
 import Rigid.AffinoidAlgebra.RationalLocalization
+import Rigid.AffinoidAlgebra.ResidueNorm
 import Rigid.TateAlgebra.Complete
 import Rigid.TateAlgebra.Noetherian
 import Rigid.TateAlgebra.Multiplicative
@@ -339,16 +340,9 @@ noncomputable def residueTopology (P : AffinoidPresentation K A) : TopologicalSp
 
 /-- The quotient topology of an affinoid algebra is independent of its presentation. -/
 theorem residueTopology_eq (P Q : AffinoidPresentation K A) :
-    P.residueTopology = Q.residueTopology := by
-  apply le_antisymm
-  · have h : @Continuous A A P.residueTopology Q.residueTopology (AlgHom.id K A) :=
-      Rigid.continuous_for_affinoidPresentationData K
-        P.ideal P.equiv Q.ideal Q.equiv (AlgHom.id K A)
-    rwa [continuous_iff_coinduced_le] at h
-  · have h : @Continuous A A Q.residueTopology P.residueTopology (AlgHom.id K A) :=
-      Rigid.continuous_for_affinoidPresentationData K
-        Q.ideal Q.equiv P.ideal P.equiv (AlgHom.id K A)
-    rwa [continuous_iff_coinduced_le] at h
+    P.residueTopology = Q.residueTopology :=
+  Rigid.residueTopology_eq_for_affinoidPresentationData K
+    P.ideal P.equiv Q.ideal Q.equiv
 
 /-- The quotient topology makes the target a topological ring. -/
 theorem residueIsTopologicalRing (P : AffinoidPresentation K A) :
@@ -366,27 +360,14 @@ structure. Unlike the induced topology, this norm can depend on the presentation
 @[reducible]
 noncomputable def residueNormedCommRing (P : AffinoidPresentation K A) :
     NormedCommRing A :=
-  letI : IsClosed (P.ideal : Set (TateAlgebra K (Fin P.n))) :=
-    Rigid.isClosed_tateAlgebra_ideal K P.ideal
-  letI : NormedCommRing (TateAlgebra K (Fin P.n) ⧸ P.ideal) := inferInstance
-  NormedCommRing.induced A (TateAlgebra K (Fin P.n) ⧸ P.ideal)
-    P.equiv.symm.toRingHom P.equiv.symm.injective
+  Rigid.residueNormedCommRing K A P.n P.ideal P.equiv
 
 /-- The residue norm makes the target a normed algebra over the ground field. -/
 @[reducible]
 noncomputable instance residueNormedAlgebra (P : AffinoidPresentation K A) :
     letI := P.residueNormedCommRing
     NormedAlgebra K A :=
-  letI : NormedCommRing A := residueNormedCommRing K A P
-  { (inferInstance : Algebra K A) with
-    norm_smul_le := by
-      intro r x
-      letI : IsClosed (P.ideal : Set (TateAlgebra K (Fin P.n))) :=
-        Rigid.isClosed_tateAlgebra_ideal K P.ideal
-      letI : NormedCommRing (TateAlgebra K (Fin P.n) ⧸ P.ideal) := inferInstance
-      change ‖P.equiv.symm (r • x)‖ ≤ ‖r‖ * ‖P.equiv.symm x‖
-      rw [map_smul]
-      exact norm_smul_le _ _ }
+  Rigid.residueNormedAlgebra K A P.n P.ideal P.equiv
 
 /-- The scalar embedding of the residue normed algebra agrees with the presentation map applied to
 constant Tate series. -/
@@ -395,56 +376,20 @@ theorem residueNormedAlgebra_algebraMap (P : AffinoidPresentation K A) (r : K) :
     letI : NormedCommRing A := P.residueNormedCommRing
     letI : NormedAlgebra K A := P.residueNormedAlgebra
     algebraMap K A r =
-      toAlgHom K A P (algebraMap K (TateAlgebra K (Fin P.n)) r) := by
-  change algebraMap K A r =
-    P.equiv.toAlgHom (Ideal.Quotient.mkₐ K P.ideal
-      (algebraMap K (TateAlgebra K (Fin P.n)) r))
-  rw [← P.equiv.commutes]
-  rfl
+      toAlgHom K A P (algebraMap K (TateAlgebra K (Fin P.n)) r) :=
+  Rigid.residueNormedAlgebra_algebraMap K A P.n P.ideal P.equiv r
 
 /-- The residue norm is complete. -/
 theorem residueCompleteSpace (P : AffinoidPresentation K A) :
     letI := P.residueNormedCommRing
-    CompleteSpace A := by
-  letI : IsClosed (P.ideal : Set (TateAlgebra K (Fin P.n))) :=
-    Rigid.isClosed_tateAlgebra_ideal K P.ideal
-  letI : NormedCommRing (TateAlgebra K (Fin P.n) ⧸ P.ideal) := inferInstance
-  letI : NormedCommRing A := P.residueNormedCommRing
-  let e : A ≃ₗᵢ[K] (TateAlgebra K (Fin P.n) ⧸ P.ideal) :=
-    { P.equiv.symm.toLinearEquiv with norm_map' := fun _ ↦ rfl }
-  exact (completeSpace_congr (e := e.toEquiv) e.isometry.isUniformEmbedding).2 inferInstance
+    CompleteSpace A :=
+  Rigid.residueCompleteSpace K A P.n P.ideal P.equiv
 
 /-- The residue norm is nonarchimedean. -/
 theorem residueIsUltrametricDist (P : AffinoidPresentation K A) :
     letI := P.residueNormedCommRing
-    IsUltrametricDist A := by
-  letI : IsClosed (P.ideal : Set (TateAlgebra K (Fin P.n))) :=
-    Rigid.isClosed_tateAlgebra_ideal K P.ideal
-  letI : NormedCommRing (TateAlgebra K (Fin P.n) ⧸ P.ideal) := inferInstance
-  letI : IsUltrametricDist (TateAlgebra K (Fin P.n) ⧸ P.ideal) :=
-    IsUltrametricDist.isUltrametricDist_of_forall_norm_add_le_max_norm fun x y ↦ by
-      refine le_of_forall_pos_le_add fun ε hε ↦ ?_
-      obtain ⟨x', hx', hxnorm⟩ :=
-        Ideal.Quotient.norm_mk_lt (ε := ε / 2) x (half_pos hε)
-      obtain ⟨y', hy', hynorm⟩ :=
-        Ideal.Quotient.norm_mk_lt (ε := ε / 2) y (half_pos hε)
-      calc
-        ‖x + y‖ = ‖Ideal.Quotient.mk P.ideal x' + Ideal.Quotient.mk P.ideal y'‖ := by
-          rw [hx', hy']
-        _ = ‖Ideal.Quotient.mk P.ideal (x' + y')‖ := by rw [map_add]
-        _ ≤ ‖x' + y'‖ := Ideal.Quotient.norm_mk_le P.ideal _
-        _ ≤ max ‖x'‖ ‖y'‖ := IsUltrametricDist.norm_add_le_max _ _
-        _ ≤ max (‖x‖ + ε / 2) (‖y‖ + ε / 2) :=
-          max_le_max (le_of_lt hxnorm) (le_of_lt hynorm)
-        _ ≤ max ‖x‖ ‖y‖ + ε := by
-          apply max_le
-          · linarith [le_max_left ‖x‖ ‖y‖]
-          · linarith [le_max_right ‖x‖ ‖y‖]
-  letI : NormedCommRing A := P.residueNormedCommRing
-  exact IsUltrametricDist.isUltrametricDist_of_forall_norm_add_le_max_norm fun x y ↦ by
-    change ‖P.equiv.symm (x + y)‖ ≤ max ‖P.equiv.symm x‖ ‖P.equiv.symm y‖
-    rw [map_add]
-    exact IsUltrametricDist.norm_add_le_max _ _
+    IsUltrametricDist A :=
+  Rigid.residueIsUltrametricDist K A P.n P.ideal P.equiv
 
 /-- The metric topology of the residue norm is the quotient topology. -/
 theorem residueNormedCommRing_topology_eq (P : AffinoidPresentation K A) :
