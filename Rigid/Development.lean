@@ -2646,37 +2646,53 @@ theorem comparisonBerkovichToRigid_obj_ofAffinoidIso_naturality
         comparisonRigidSpaceOfAffinoidMap K hA hB f := sorry
 
 /-- A chosen quasi-inverse from rigid spaces to Berkovich spaces. -/
-noncomputable def rigidToBerkovich : ComparisonRigidSpace K ⥤ ComparisonBerkovichSpace K := sorry
+noncomputable def rigidToBerkovich : ComparisonRigidSpace K ⥤ ComparisonBerkovichSpace K := by
+  letI : (comparisonBerkovichToRigid K).IsEquivalence :=
+    comparisonBerkovichToRigid_isEquivalence K
+  exact (comparisonBerkovichToRigid K).inv
 
 /-- The rigid-to-Berkovich functor followed by the canonical functor is naturally isomorphic to the
 identity. -/
 noncomputable def rigidToBerkovichCompComparisonBerkovichToRigidIso :
-    rigidToBerkovich K ⋙ comparisonBerkovichToRigid K ≅ 𝟭 (ComparisonRigidSpace K) := sorry
+    rigidToBerkovich K ⋙ comparisonBerkovichToRigid K ≅ 𝟭 (ComparisonRigidSpace K) := by
+  letI : (comparisonBerkovichToRigid K).IsEquivalence :=
+    comparisonBerkovichToRigid_isEquivalence K
+  exact (comparisonBerkovichToRigid K).asEquivalence.counitIso
 
 /-- The canonical functor followed by its chosen quasi-inverse is naturally isomorphic to the
 identity. -/
 noncomputable def comparisonBerkovichToRigidCompRigidToBerkovichIso :
     comparisonBerkovichToRigid K ⋙ rigidToBerkovich K ≅
-      𝟭 (ComparisonBerkovichSpace K) := sorry
+      𝟭 (ComparisonBerkovichSpace K) := by
+  letI : (comparisonBerkovichToRigid K).IsEquivalence :=
+    comparisonBerkovichToRigid_isEquivalence K
+  exact (comparisonBerkovichToRigid K).asEquivalence.unitIso.symm
 
 /-- Main comparison theorem: the chosen rigid-to-Berkovich quasi-inverse is an equivalence. -/
 theorem rigidToBerkovich_isEquivalence :
-    (rigidToBerkovich K).IsEquivalence := sorry
+    (rigidToBerkovich K).IsEquivalence := by
+  letI : (comparisonBerkovichToRigid K).IsEquivalence :=
+    comparisonBerkovichToRigid_isEquivalence K
+  change (comparisonBerkovichToRigid K).inv.IsEquivalence
+  infer_instance
 
 /-- Data-valued form of the main comparison theorem. -/
 noncomputable def rigidBerkovichEquivalence :
-    ComparisonRigidSpace K ≌ ComparisonBerkovichSpace K := sorry
+    ComparisonRigidSpace K ≌ ComparisonBerkovichSpace K := by
+  letI : (comparisonBerkovichToRigid K).IsEquivalence :=
+    comparisonBerkovichToRigid_isEquivalence K
+  exact (comparisonBerkovichToRigid K).asEquivalence.symm
 
 /-- The forward functor of the packaged equivalence is the chosen rigid-to-Berkovich functor. -/
 @[simp]
 theorem rigidBerkovichEquivalence_functor :
-    (rigidBerkovichEquivalence K).functor = rigidToBerkovich K := sorry
+    (rigidBerkovichEquivalence K).functor = rigidToBerkovich K := rfl
 
 /-- The inverse functor of the packaged equivalence is the canonical restricted
 Berkovich-to-rigid functor. -/
 @[simp]
 theorem rigidBerkovichEquivalence_inverse :
-    (rigidBerkovichEquivalence K).inverse = comparisonBerkovichToRigid K := sorry
+    (rigidBerkovichEquivalence K).inverse = comparisonBerkovichToRigid K := rfl
 
 end GlobalSpaces
 
