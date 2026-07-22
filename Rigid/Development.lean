@@ -7,6 +7,7 @@ import Rigid.Berkovich.RelativeSpectrum
 import Rigid.Berkovich.RelativeNonempty
 import Rigid.Berkovich.CompletedResidue
 import Rigid.Berkovich.AffinoidDomain
+import Rigid.RigidSpace.AdmissibleOpen
 import Rigid.AffinoidAlgebra.QuotientNorm
 import Rigid.AffinoidAlgebra.QuotientTopology
 import Rigid.AffinoidAlgebra.RationalDatum
@@ -1365,29 +1366,32 @@ variable (K : Type u) [NontriviallyNormedField K] [CompleteSpace K] [IsUltrametr
 Grothendieck topology. -/
 def RigidSpace
     (K : Type u) [NontriviallyNormedField K] [CompleteSpace K] [IsUltrametricDist K] :
-    Type (u + 1) := sorry
+    Type (u + 1) := Rigid.RigidSpace K
 
-noncomputable instance rigidSpaceCategory : Category.{u + 1} (RigidSpace K) := sorry
+noncomputable instance rigidSpaceCategory : Category.{u + 1} (RigidSpace K) :=
+  Rigid.RigidSpace.category K
 
 noncomputable instance rigidSpaceHasBinaryProducts :
-    CategoryTheory.Limits.HasBinaryProducts (RigidSpace K) := sorry
+    CategoryTheory.Limits.HasBinaryProducts (RigidSpace K) :=
+  Rigid.RigidSpace.hasBinaryProducts K
 
 namespace RigidSpace
 
 /-- The type of analytic points of a rigid space. -/
-def Point (X : RigidSpace K) : Type (u + 1) := sorry
+def Point (X : RigidSpace K) : Type (u + 1) := Rigid.RigidSpace.PointType
 
 namespace Point
 
 /-- The map on analytic points induced by a rigid-space morphism. -/
-noncomputable def map {X Y : RigidSpace K} (f : X ⟶ Y) : Point K X → Point K Y := sorry
+noncomputable def map {X Y : RigidSpace K} (f : X ⟶ Y) : Point K X → Point K Y :=
+  Rigid.RigidSpace.Point.map K f
 
 @[simp]
-theorem map_id (X : RigidSpace K) : map K (𝟙 X) = id := sorry
+theorem map_id (X : RigidSpace K) : map K (𝟙 X) = id := Rigid.RigidSpace.Point.map_id K X
 
 @[simp]
 theorem map_comp {X Y Z : RigidSpace K} (f : X ⟶ Y) (g : Y ⟶ Z) :
-    map K (f ≫ g) = map K g ∘ map K f := sorry
+    map K (f ≫ g) = map K g ∘ map K f := Rigid.RigidSpace.Point.map_comp K f g
 
 /-- An analytic isomorphism induces an equivalence on points. -/
 noncomputable def equivOfIso {X Y : RigidSpace K} (e : X ≅ Y) : Point K X ≃ Point K Y where
@@ -1408,84 +1412,98 @@ noncomputable def pointFunctor : RigidSpace K ⥤ Type (u + 1) where
   map_comp f g := by apply TypeCat.homEquiv.injective; exact Point.map_comp K f g
 
 /-- An admissible open of a rigid space. -/
-def AdmissibleOpen (X : RigidSpace K) : Type (u + 1) := sorry
+def AdmissibleOpen (X : RigidSpace K) : Type (u + 1) :=
+  Rigid.RigidSpace.AdmissibleOpenType
 
 namespace AdmissibleOpen
 
 /-- The analytic points belonging to an admissible open. -/
 noncomputable def carrier {X : RigidSpace K} (U : AdmissibleOpen K X) :
-    Set (Point K X) := sorry
+    Set (Point K X) := Rigid.RigidSpace.AdmissibleOpen.carrier K (X := X) U
 
 /-- Admissible opens are determined by their point sets. -/
 @[ext]
 theorem ext {X : RigidSpace K} {U V : AdmissibleOpen K X}
-    (h : U.carrier = V.carrier) : U = V := sorry
+    (h : U.carrier = V.carrier) : U = V :=
+  Rigid.RigidSpace.AdmissibleOpen.ext K (X := X) h
 
 /-- The full admissible open. -/
-noncomputable def top (X : RigidSpace K) : AdmissibleOpen K X := sorry
+noncomputable def top (X : RigidSpace K) : AdmissibleOpen K X :=
+  Rigid.RigidSpace.AdmissibleOpen.top K X
 
 @[simp]
 theorem carrier_top (X : RigidSpace K) :
-    (top K X).carrier = Set.univ := sorry
+    (top K X).carrier = Set.univ := Rigid.RigidSpace.AdmissibleOpen.carrier_top K X
 
 /-- The intersection of two admissible opens. -/
 noncomputable def inter {X : RigidSpace K} (U V : AdmissibleOpen K X) :
-    AdmissibleOpen K X := sorry
+    AdmissibleOpen K X := Rigid.RigidSpace.AdmissibleOpen.inter K (X := X) U V
 
 @[simp]
 theorem carrier_inter {X : RigidSpace K} (U V : AdmissibleOpen K X) :
-    (inter K U V).carrier = U.carrier ∩ V.carrier := sorry
+    (inter K U V).carrier = U.carrier ∩ V.carrier :=
+  Rigid.RigidSpace.AdmissibleOpen.carrier_inter K (X := X) U V
 
 /-- The intersection is contained in its left factor. -/
 theorem inter_subset_left {X : RigidSpace K} (U V : AdmissibleOpen K X) :
-    (inter K U V).carrier ⊆ U.carrier := sorry
+    (inter K U V).carrier ⊆ U.carrier :=
+  Rigid.RigidSpace.AdmissibleOpen.inter_subset_left K (X := X) U V
 
 /-- The intersection is contained in its right factor. -/
 theorem inter_subset_right {X : RigidSpace K} (U V : AdmissibleOpen K X) :
-    (inter K U V).carrier ⊆ V.carrier := sorry
+    (inter K U V).carrier ⊆ V.carrier :=
+  Rigid.RigidSpace.AdmissibleOpen.inter_subset_right K (X := X) U V
 
 /-- A family is an admissible cover of an admissible open in the rigid Grothendieck topology. -/
 def IsCover {X : RigidSpace K} {ι : Type (u + 1)}
-    (U : ι → AdmissibleOpen K X) (V : AdmissibleOpen K X) : Prop := sorry
+    (U : ι → AdmissibleOpen K X) (V : AdmissibleOpen K X) : Prop :=
+  Rigid.RigidSpace.AdmissibleOpen.IsCover K (X := X) U V
 
 namespace IsCover
 
 /-- A one-member family covers its member. -/
 theorem singleton {X : RigidSpace K} (V : AdmissibleOpen K X) :
-    IsCover K (fun _ : PUnit ↦ V) V := sorry
+    IsCover K (fun _ : PUnit ↦ V) V :=
+  Rigid.RigidSpace.AdmissibleOpen.IsCover.singleton K (X := X) V
 
 /-- Admissible covers are stable under intersection with another admissible open. -/
 theorem pullback {X : RigidSpace K} {ι : Type (u + 1)}
     {U : ι → AdmissibleOpen K X} {V : AdmissibleOpen K X} (h : IsCover K U V)
     (W : AdmissibleOpen K X) :
-    IsCover K (fun i ↦ inter K (U i) W) (inter K V W) := sorry
+    IsCover K (fun i ↦ inter K (U i) W) (inter K V W) :=
+  Rigid.RigidSpace.AdmissibleOpen.IsCover.pullback K (X := X) h W
 
 /-- Admissible coverings are transitive. -/
 theorem trans {X : RigidSpace K} {ι : Type (u + 1)} {κ : ι → Type (u + 1)}
     {U : ι → AdmissibleOpen K X} {V : AdmissibleOpen K X} (hU : IsCover K U V)
     (W : ∀ i, κ i → AdmissibleOpen K X) (hW : ∀ i, IsCover K (W i) (U i)) :
-    IsCover K (fun p : Σ i, κ i ↦ W p.1 p.2) V := sorry
+    IsCover K (fun p : Σ i, κ i ↦ W p.1 p.2) V :=
+  Rigid.RigidSpace.AdmissibleOpen.IsCover.trans K (X := X) hU W hW
 
 /-- Every member of an admissible cover is contained in the covered open. -/
 theorem subset {X : RigidSpace K} {ι : Type (u + 1)}
     {U : ι → AdmissibleOpen K X} {V : AdmissibleOpen K X} (h : IsCover K U V) (i : ι) :
-    (U i).carrier ⊆ V.carrier := sorry
+    (U i).carrier ⊆ V.carrier :=
+  Rigid.RigidSpace.AdmissibleOpen.IsCover.subset K (X := X) h i
 
 /-- An admissible cover covers the underlying point set. -/
 theorem iUnion_carrier {X : RigidSpace K} {ι : Type (u + 1)}
     {U : ι → AdmissibleOpen K X} {V : AdmissibleOpen K X} (h : IsCover K U V) :
-    V.carrier = ⋃ i, (U i).carrier := sorry
+    V.carrier = ⋃ i, (U i).carrier :=
+  Rigid.RigidSpace.AdmissibleOpen.IsCover.iUnion_carrier K (X := X) h
 
 end IsCover
 
 /-- An admissible open is quasi-compact for the admissible topology. -/
-def IsQuasiCompact {X : RigidSpace K} (U : AdmissibleOpen K X) : Prop := sorry
+def IsQuasiCompact {X : RigidSpace K} (U : AdmissibleOpen K X) : Prop :=
+  Rigid.RigidSpace.AdmissibleOpen.IsQuasiCompact K (X := X) U
 
 /-- Quasi-compactness means that every admissible cover has a finite admissible subcover. -/
 theorem isQuasiCompact_iff {X : RigidSpace K} (U : AdmissibleOpen K X) :
     IsQuasiCompact K U ↔
       ∀ {ι : Type (u + 1)} (V : ι → AdmissibleOpen K X), IsCover K V U →
-        ∃ s : Set ι, s.Finite ∧ IsCover K (fun i : s ↦ V i.1) U := sorry
+        ∃ s : Set ι, s.Finite ∧ IsCover K (fun i : s ↦ V i.1) U :=
+  Rigid.RigidSpace.AdmissibleOpen.isQuasiCompact_iff K (X := X) U
 
 end AdmissibleOpen
 
