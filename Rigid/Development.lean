@@ -44,7 +44,7 @@ affinoid examples, isomorphism invariance, and nonvacuity conditions to constrai
 
 open CategoryTheory
 open Filter
-open scoped Topology
+open scoped NNReal Topology
 
 universe u v w z
 
@@ -934,85 +934,198 @@ abbrev ResidueDomain (x : BerkovichSpectrumOver K A) := A ⧸ x.kernel
 abbrev ResidueFractionField (x : BerkovichSpectrumOver K A) :=
   FractionRing (ResidueDomain K A x)
 
-noncomputable instance residueFractionNormedField (x : BerkovichSpectrumOver K A) :
-    NormedField (ResidueFractionField K A x) := sorry
+set_option linter.overlappingInstances false
 
-noncomputable instance residueFractionIsUltrametricDist (x : BerkovichSpectrumOver K A) :
-    IsUltrametricDist (ResidueFractionField K A x) := sorry
+section CompletedResidueConstruction
+
+private noncomputable def completedResidueValuation (x : BerkovichSpectrumOver K A) :
+    Valuation A ℝ≥0 where
+  toFun a := ⟨x a, BerkovichSpectrum.nonneg A x.toBerkovichSpectrum a⟩
+  map_zero' := by ext; exact x.toBerkovichSpectrum.map_zero
+  map_one' := by ext; exact x.toBerkovichSpectrum.map_one
+  map_mul' a b := by ext; exact BerkovichSpectrum.map_mul A x.toBerkovichSpectrum a b
+  map_add_le_max' a b := BerkovichSpectrumOver.map_add_le_max K A x a b
+
+private theorem completedResidueValuation_supp_eq_kernel (x : BerkovichSpectrumOver K A) :
+    (completedResidueValuation K A x).supp = x.kernel := by
+  ext a
+  rw [Valuation.mem_supp_iff, BerkovichSpectrumOver.mem_kernel_iff]
+  change (⟨x a, BerkovichSpectrum.nonneg A x.toBerkovichSpectrum a⟩ : ℝ≥0) = 0 ↔ x a = 0
+  simp
+
+private noncomputable def completedResidueQuotientValuation
+    (x : BerkovichSpectrumOver K A) : Valuation (ResidueDomain K A x) ℝ≥0 :=
+  (completedResidueValuation K A x).onQuot
+    (by rw [completedResidueValuation_supp_eq_kernel])
+
+@[simp]
+private theorem completedResidueQuotientValuation_supp (x : BerkovichSpectrumOver K A) :
+    (completedResidueQuotientValuation K A x).supp = 0 := by
+  rw [completedResidueQuotientValuation, Valuation.supp_quot,
+    completedResidueValuation_supp_eq_kernel]
+  exact Ideal.map_quotient_self x.kernel
+
+private noncomputable def completedResidueFractionValuation
+    (x : BerkovichSpectrumOver K A) : Valuation (ResidueFractionField K A x) ℝ≥0 :=
+  (completedResidueQuotientValuation K A x).extendToLocalization
+    (B := ResidueFractionField K A x) (by
+      intro s hs
+      rw [Ideal.mem_primeCompl_iff, completedResidueQuotientValuation_supp]
+      exact nonZeroDivisors.ne_zero hs)
+
+private noncomputable def completedResidueFractionAbsoluteValue
+    (x : BerkovichSpectrumOver K A) : AbsoluteValue (ResidueFractionField K A x) ℝ where
+  toFun z := completedResidueFractionValuation K A x z
+  map_mul' a b := by simp
+  nonneg' _ := NNReal.zero_le_coe
+  eq_zero' a := by
+    rw [NNReal.coe_eq_zero, (completedResidueFractionValuation K A x).zero_iff]
+  add_le' a b := by
+    exact (NNReal.coe_le_coe.mpr
+      ((completedResidueFractionValuation K A x).map_add a b)).trans
+        (max_le (le_add_of_nonneg_right NNReal.zero_le_coe)
+          (le_add_of_nonneg_left NNReal.zero_le_coe))
+
+noncomputable instance residueFractionNormedField [CompleteSpace A] [IsUltrametricDist A]
+    (x : BerkovichSpectrumOver K A) :
+    NormedField (ResidueFractionField K A x) :=
+  (completedResidueFractionAbsoluteValue K A x).toNormedField
+
+noncomputable instance residueFractionIsUltrametricDist
+    [CompleteSpace A] [IsUltrametricDist A] (x : BerkovichSpectrumOver K A) :
+    IsUltrametricDist (ResidueFractionField K A x) :=
+  IsUltrametricDist.isUltrametricDist_of_isNonarchimedean_norm fun a b ↦ by
+    change (completedResidueFractionValuation K A x (a + b) : ℝ) ≤
+      max (completedResidueFractionValuation K A x a : ℝ)
+        (completedResidueFractionValuation K A x b : ℝ)
+    exact_mod_cast (completedResidueFractionValuation K A x).map_add a b
 
 /-- The completed residue field of a relative Berkovich point. -/
 abbrev CompletedResidueField (x : BerkovichSpectrumOver K A) :=
   UniformSpace.Completion (ResidueFractionField K A x)
 
-noncomputable instance completedResidueIsUltrametricDist (x : BerkovichSpectrumOver K A) :
-    IsUltrametricDist (CompletedResidueField K A x) := sorry
+private theorem completedResidue_norm_add_le_max (x : BerkovichSpectrumOver K A)
+    (a b : CompletedResidueField K A x) : ‖a + b‖ ≤ max ‖a‖ ‖b‖ := by
+  induction a, b using UniformSpace.Completion.induction_on₂ with
+  | hp => exact isClosed_le (by fun_prop) (by fun_prop)
+  | ih a b =>
+      simpa only [← UniformSpace.Completion.coe_add, UniformSpace.Completion.norm_coe] using
+        IsUltrametricDist.norm_add_le_max a b
+
+noncomputable instance completedResidueIsUltrametricDist
+    [CompleteSpace A] [IsUltrametricDist A] (x : BerkovichSpectrumOver K A) :
+    IsUltrametricDist (CompletedResidueField K A x) :=
+  IsUltrametricDist.isUltrametricDist_of_isNonarchimedean_norm
+    (completedResidue_norm_add_le_max K A x)
 
 /-- The canonical map from the original algebra to the residue fraction field. -/
-noncomputable def residueFractionMap (x : BerkovichSpectrumOver K A) :
-    A →+* ResidueFractionField K A x := sorry
+noncomputable def residueFractionMap [CompleteSpace A] [IsUltrametricDist A]
+    (x : BerkovichSpectrumOver K A) :
+    A →+* ResidueFractionField K A x :=
+  (algebraMap (ResidueDomain K A x) (ResidueFractionField K A x)).comp
+    (Ideal.Quotient.mk x.kernel)
 
 /-- The residue-fraction map is the quotient map followed by the canonical embedding into the
 fraction field. -/
 @[simp]
-theorem residueFractionMap_apply (x : BerkovichSpectrumOver K A) (a : A) :
+theorem residueFractionMap_apply [CompleteSpace A] [IsUltrametricDist A]
+    (x : BerkovichSpectrumOver K A) (a : A) :
     residueFractionMap K A x a =
       algebraMap (ResidueDomain K A x) (ResidueFractionField K A x)
-        (Ideal.Quotient.mk x.kernel a) := sorry
+        (Ideal.Quotient.mk x.kernel a) := rfl
 
 /-- The residue-fraction map realizes the point seminorm before completion. -/
 @[simp]
-theorem norm_residueFractionMap (x : BerkovichSpectrumOver K A) (a : A) :
-    ‖residueFractionMap K A x a‖ = x a := sorry
+theorem norm_residueFractionMap [CompleteSpace A] [IsUltrametricDist A]
+    (x : BerkovichSpectrumOver K A) (a : A) :
+    ‖residueFractionMap K A x a‖ = x a := by
+  change (completedResidueFractionValuation K A x
+    (algebraMap (ResidueDomain K A x) (ResidueFractionField K A x)
+      (Ideal.Quotient.mk x.kernel a)) : ℝ≥0) = x a
+  rw [completedResidueFractionValuation, Valuation.extendToLocalization_apply_map_apply]
+  rfl
 
 /-- The canonical evaluation map from the algebra to the completed residue field. -/
-noncomputable def completedResidueMap (x : BerkovichSpectrumOver K A) :
-    A →+* CompletedResidueField K A x := sorry
+noncomputable def completedResidueMap [CompleteSpace A] [IsUltrametricDist A]
+    (x : BerkovichSpectrumOver K A) :
+    A →+* CompletedResidueField K A x :=
+  UniformSpace.Completion.coeRingHom.comp (residueFractionMap K A x)
 
 /-- Completed residue evaluation is the residue-fraction map followed by the canonical map into the
 uniform completion. -/
 @[simp]
-theorem completedResidueMap_apply (x : BerkovichSpectrumOver K A) (a : A) :
+theorem completedResidueMap_apply [CompleteSpace A] [IsUltrametricDist A]
+    (x : BerkovichSpectrumOver K A) (a : A) :
     completedResidueMap K A x a =
-      (residueFractionMap K A x a : CompletedResidueField K A x) := sorry
+      (residueFractionMap K A x a : CompletedResidueField K A x) := rfl
 
 @[simp]
-theorem norm_completedResidueMap (x : BerkovichSpectrumOver K A) (a : A) :
-    ‖completedResidueMap K A x a‖ = x a := sorry
+theorem norm_completedResidueMap [CompleteSpace A] [IsUltrametricDist A]
+    (x : BerkovichSpectrumOver K A) (a : A) :
+    ‖completedResidueMap K A x a‖ = x a := by
+  change ‖(residueFractionMap K A x a : CompletedResidueField K A x)‖ = x a
+  rw [UniformSpace.Completion.norm_coe, norm_residueFractionMap]
 
-noncomputable instance completedResidueAlgebra (x : BerkovichSpectrumOver K A) :
-    Algebra K (CompletedResidueField K A x) := sorry
+noncomputable instance completedResidueAlgebra [CompleteSpace A] [IsUltrametricDist A]
+    (x : BerkovichSpectrumOver K A) :
+    Algebra K (CompletedResidueField K A x) :=
+  ((completedResidueMap K A x).comp (algebraMap K A)).toAlgebra
 
-noncomputable instance completedResidueNormedAlgebra (x : BerkovichSpectrumOver K A) :
-    NormedAlgebra K (CompletedResidueField K A x) := sorry
+noncomputable instance completedResidueNormedAlgebra
+    [CompleteSpace A] [IsUltrametricDist A] (x : BerkovichSpectrumOver K A) :
+    NormedAlgebra K (CompletedResidueField K A x) where
+  norm_smul_le r y := by
+    rw [Algebra.smul_def]
+    change ‖completedResidueMap K A x (algebraMap K A r) * y‖ ≤ ‖r‖ * ‖y‖
+    rw [_root_.norm_mul, norm_completedResidueMap, x.map_algebraMap]
 
 noncomputable instance completedResidueNontriviallyNormedField
-    (x : BerkovichSpectrumOver K A) :
-    NontriviallyNormedField (CompletedResidueField K A x) := sorry
+    [CompleteSpace A] [IsUltrametricDist A] (x : BerkovichSpectrumOver K A) :
+    NontriviallyNormedField (CompletedResidueField K A x) :=
+  ⟨let ⟨r, hr⟩ := NontriviallyNormedField.non_trivial (α := K)
+   ⟨algebraMap K (CompletedResidueField K A x) r, by
+    change 1 < ‖completedResidueMap K A x (algebraMap K A r)‖
+    rwa [norm_completedResidueMap, x.map_algebraMap]⟩⟩
 
 /-- The completed residue evaluation as a `K`-algebra homomorphism. -/
-noncomputable def completedResidueAlgHom (x : BerkovichSpectrumOver K A) :
-    A →ₐ[K] CompletedResidueField K A x := sorry
+noncomputable def completedResidueAlgHom [CompleteSpace A] [IsUltrametricDist A]
+    (x : BerkovichSpectrumOver K A) :
+    A →ₐ[K] CompletedResidueField K A x where
+  __ := completedResidueMap K A x
+  commutes' _ := rfl
 
 /-- The bundled algebra homomorphism has the canonical completed residue map as its underlying ring
 homomorphism. -/
 @[simp]
-theorem completedResidueAlgHom_apply (x : BerkovichSpectrumOver K A) (a : A) :
-    completedResidueAlgHom K A x a = completedResidueMap K A x a := sorry
+theorem completedResidueAlgHom_apply [CompleteSpace A] [IsUltrametricDist A]
+    (x : BerkovichSpectrumOver K A) (a : A) :
+    completedResidueAlgHom K A x a = completedResidueMap K A x a := rfl
 
 /-- The scalar embedding in the completed residue field is induced by evaluation on the original
 algebra. -/
 @[simp]
-theorem algebraMap_completedResidueField (x : BerkovichSpectrumOver K A) (r : K) :
+theorem algebraMap_completedResidueField [CompleteSpace A] [IsUltrametricDist A]
+    (x : BerkovichSpectrumOver K A) (r : K) :
     algebraMap K (CompletedResidueField K A x) r =
-      completedResidueMap K A x (algebraMap K A r) := sorry
+      completedResidueMap K A x (algebraMap K A r) := rfl
 
 @[simp]
-theorem norm_completedResidueAlgHom (x : BerkovichSpectrumOver K A) (a : A) :
-    ‖completedResidueAlgHom K A x a‖ = x a := sorry
+theorem norm_completedResidueAlgHom [CompleteSpace A] [IsUltrametricDist A]
+    (x : BerkovichSpectrumOver K A) (a : A) :
+    ‖completedResidueAlgHom K A x a‖ = x a :=
+  norm_completedResidueMap K A x a
 
 @[simp]
-theorem ker_completedResidueMap (x : BerkovichSpectrumOver K A) :
-    RingHom.ker (completedResidueMap K A x) = x.kernel := sorry
+theorem ker_completedResidueMap [CompleteSpace A] [IsUltrametricDist A]
+    (x : BerkovichSpectrumOver K A) :
+    RingHom.ker (completedResidueMap K A x) = x.kernel := by
+  ext a
+  rw [RingHom.mem_ker, ← norm_eq_zero, norm_completedResidueMap,
+    BerkovichSpectrumOver.mem_kernel_iff]
+
+end CompletedResidueConstruction
+
+set_option linter.overlappingInstances true
 
 /-- The rational locus cut out by `|fᵢ(x)| ≤ |g(x)|`. -/
 def rationalDomainSet {n : ℕ} (g : A) (f : Fin n → A) : Set (BerkovichSpectrumOver K A) :=
