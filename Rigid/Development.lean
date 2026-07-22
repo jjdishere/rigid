@@ -6,6 +6,7 @@ import Rigid.Berkovich.Nonempty
 import Rigid.Berkovich.RelativeSpectrum
 import Rigid.Berkovich.RelativeNonempty
 import Rigid.Berkovich.CompletedResidue
+import Rigid.Berkovich.RationalLocalization
 import Rigid.Berkovich.AffinoidDomain
 import Rigid.AffinoidSpectrum.RationalBasis
 import Rigid.AffinoidAlgebra.QuotientNorm
@@ -1239,7 +1240,52 @@ theorem denominator_ne_zero {n : ℕ} {g : A} {f : Fin n → A}
 noncomputable def localizationSpectrumHomeomorph {n : ℕ} {g : A} {f : Fin n → A}
     (hgf : IsRationalDatum g f) :
     BerkovichSpectrumOver K (RationalLocalization K A n g f) ≃ₜ
-      RationalDomain K A g f := sorry
+      RationalDomain K A g f := by
+  let P : Rigid.BerkovichSpectrumOver.RationalLocalizationPresentation K A
+      (RationalLocalization K A n g f) n g f :=
+    { isRationalDatum := hgf
+      baseMap := RationalLocalization.baseMap K A n g f
+      coordinate := RationalLocalization.coordinate K A n g f
+      baseMap_denominator_mul_coordinate :=
+        RationalLocalization.baseMap_denominator_mul_coordinate K A n g f
+      isPowerBounded_coordinate :=
+        RationalLocalization.isPowerBounded_coordinate K A n g f
+      isUnit_baseMap_denominator :=
+        RationalLocalization.isUnit_baseMap_denominator K A n g f hgf
+      lift := fun φ x hx hrel ↦ RationalLocalization.lift K A n g f φ x hx hrel
+      lift_comp_baseMap := fun φ x hx hrel ↦
+        RationalLocalization.lift_comp_baseMap K A n g f φ x hx hrel
+      lift_coordinate := fun φ x hx hrel i ↦
+        RationalLocalization.lift_coordinate K A n g f φ x hx hrel i
+      hom_ext := fun φ ψ hbase hcoordinate ↦
+        RationalLocalization.hom_ext K A n g f φ ψ hbase hcoordinate }
+  let spectrumEquiv : ∀ (B : Type v) [NormedCommRing B] [NormedAlgebra K B]
+      [CompleteSpace B] [IsUltrametricDist B],
+      BerkovichSpectrumOver K B ≃ₜ Rigid.BerkovichSpectrumOver K B := fun B _ _ _ _ ↦
+    { toFun := fun x ↦
+        { toBerkovichSpectrum :=
+            ⟨x.toBerkovichSpectrum.seminorm, x.toBerkovichSpectrum.le_norm'⟩
+          map_algebraMap' := x.map_algebraMap' }
+      invFun := fun x ↦
+        { toBerkovichSpectrum :=
+            ⟨x.toBerkovichSpectrum.seminorm, x.toBerkovichSpectrum.le_norm'⟩
+          map_algebraMap' := x.map_algebraMap' }
+      left_inv := by intro x; cases x; rfl
+      right_inv := by intro x; cases x; rfl
+      continuous_toFun :=
+        (Rigid.BerkovichSpectrumOver.continuous_iff_eval K B).2 fun b ↦
+          BerkovichSpectrumOver.continuous_eval K B b
+      continuous_invFun :=
+        (BerkovichSpectrumOver.continuous_iff_eval K B).2 fun b ↦
+          Rigid.BerkovichSpectrumOver.continuous_eval K B b }
+  let sourceEquiv := spectrumEquiv (RationalLocalization K A n g f)
+  let ambientEquiv := spectrumEquiv A
+  let domainEquiv : Rigid.BerkovichSpectrumOver.RationalDomain K A g f ≃ₜ
+      RationalDomain K A g f :=
+    ambientEquiv.symm.subtype fun _ ↦ Iff.rfl
+  exact sourceEquiv.trans
+    ((Rigid.BerkovichSpectrumOver.RationalDomain.localizationSpectrumHomeomorph K A P).trans
+      domainEquiv)
 
 /-- Under the rational-localization homeomorphism, evaluation of an ambient function is pullback
 along the canonical base map. -/
@@ -1248,7 +1294,8 @@ theorem localizationSpectrumHomeomorph_apply_baseMap
     {n : ℕ} {g : A} {f : Fin n → A} (hgf : IsRationalDatum g f)
     (x : BerkovichSpectrumOver K (RationalLocalization K A n g f)) (a : A) :
     ((localizationSpectrumHomeomorph K A hgf x).1 : A → ℝ) a =
-      x (RationalLocalization.baseMap K A n g f a) := sorry
+      x (RationalLocalization.baseMap K A n g f a) := by
+  rfl
 
 end RationalDomain
 
