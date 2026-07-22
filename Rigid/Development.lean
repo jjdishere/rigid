@@ -1254,23 +1254,6 @@ structure AffinoidRationalSubdomain
 
 namespace AffinoidRationalSubdomain
 
-private def toRigid (U : AffinoidRationalSubdomain K A) :
-    Rigid.AffinoidRationalSubdomain K A where
-  n := U.n
-  g := U.g
-  f := U.f
-  isRational := U.isRational
-
-private def pointToRigid (x : BerkovichSpectrumOver K A) :
-    Rigid.BerkovichSpectrumOver K A where
-  toBerkovichSpectrum :=
-    { seminorm := x.toBerkovichSpectrum.seminorm
-      le_norm' := x.toBerkovichSpectrum.le_norm' }
-  map_algebraMap' := x.map_algebraMap'
-
-private def extendedNumerator (U : AffinoidRationalSubdomain K A) : Fin (U.n + 1) → A :=
-  Fin.cases U.g U.f
-
 /-- The point set of a bundled rational subdomain. -/
 def carrier (U : AffinoidRationalSubdomain K A) : Set (BerkovichSpectrumOver K A) :=
   BerkovichSpectrumOver.rationalDomainSet K A U.g U.f
@@ -1285,11 +1268,12 @@ noncomputable def inter (U V : AffinoidRationalSubdomain K A) :
   n := (U.n + 1) * (V.n + 1)
   g := U.g * V.g
   f k :=
-    extendedNumerator K A U (finProdFinEquiv.symm k).1 *
-      extendedNumerator K A V (finProdFinEquiv.symm k).2
+    Fin.cases U.g U.f (finProdFinEquiv.symm k).1 *
+      Fin.cases V.g V.f (finProdFinEquiv.symm k).2
   isRational := by
     exact (Rigid.AffinoidRationalSubdomain.inter K A
-      (toRigid K A U) (toRigid K A V)).isRational
+      { n := U.n, g := U.g, f := U.f, isRational := U.isRational }
+      { n := V.n, g := V.g, f := V.f, isRational := V.isRational }).isRational
 
 @[simp]
 theorem carrier_inter (U V : AffinoidRationalSubdomain K A) :
@@ -1297,8 +1281,12 @@ theorem carrier_inter (U V : AffinoidRationalSubdomain K A) :
   ext x
   have h := Set.ext_iff.mp
     (Rigid.AffinoidRationalSubdomain.carrier_inter K A
-      (toRigid K A U) (toRigid K A V))
-    (pointToRigid K A x)
+      { n := U.n, g := U.g, f := U.f, isRational := U.isRational }
+      { n := V.n, g := V.g, f := V.f, isRational := V.isRational })
+    { toBerkovichSpectrum :=
+        { seminorm := x.toBerkovichSpectrum.seminorm
+          le_norm' := x.toBerkovichSpectrum.le_norm' }
+      map_algebraMap' := x.map_algebraMap' }
   exact h
 
 /-- The intersection is contained in its left factor. -/
