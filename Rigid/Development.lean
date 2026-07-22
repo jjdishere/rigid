@@ -622,9 +622,9 @@ theorem isAffinoidAlgebra_rationalLocalization (hA : IsAffinoidAlgebra K A)
 
 section BerkovichSpectrum
 
-variable (R : Type v) [NormedRing R]
+variable (R : Type v) [SeminormedRing R]
 
-/-- A point of the Berkovich spectrum of a normed ring: a multiplicative seminorm bounded by the
+/-- A point of the Berkovich spectrum of a seminormed ring: a multiplicative seminorm bounded by the
 ring norm. The bound is normalized to be contractive. -/
 structure BerkovichSpectrum where
   seminorm : MulRingSeminorm R
@@ -701,7 +701,7 @@ theorem kernel_isPrime (x : BerkovichSpectrum R) : x.kernel.IsPrime := by
     · exact Or.inr ((mem_kernel_iff R x b).mpr hb)
 
 /-- Pull back a Berkovich point along a norm-nonincreasing ring homomorphism. -/
-def comap {S : Type w} [NormedRing S] (f : R →+* S) (hf : ∀ a, ‖f a‖ ≤ ‖a‖)
+def comap {S : Type w} [SeminormedRing S] (f : R →+* S) (hf : ∀ a, ‖f a‖ ≤ ‖a‖)
     (x : BerkovichSpectrum S) : BerkovichSpectrum R where
   seminorm :=
     { toFun := fun a ↦ x (f a)
@@ -713,7 +713,8 @@ def comap {S : Type w} [NormedRing S] (f : R →+* S) (hf : ∀ a, ‖f a‖ ≤
   le_norm' a := (le_norm S x (f a)).trans (hf a)
 
 @[simp]
-theorem comap_apply {S : Type w} [NormedRing S] (f : R →+* S) (hf : ∀ a, ‖f a‖ ≤ ‖a‖)
+theorem comap_apply {S : Type w} [SeminormedRing S] (f : R →+* S)
+    (hf : ∀ a, ‖f a‖ ≤ ‖a‖)
     (x : BerkovichSpectrum S) (a : R) : comap R f hf x a = x (f a) :=
   rfl
 
@@ -746,7 +747,8 @@ theorem continuous_iff_eval {X : Type w} [TopologicalSpace X] {f : X → Berkovi
   exact continuous_pi_iff
 
 /-- Pullback of Berkovich points along a norm-nonincreasing ring homomorphism is continuous. -/
-theorem continuous_comap {S : Type w} [NormedRing S] (f : R →+* S) (hf : ∀ a, ‖f a‖ ≤ ‖a‖) :
+theorem continuous_comap {S : Type w} [SeminormedRing S] (f : R →+* S)
+    (hf : ∀ a, ‖f a‖ ≤ ‖a‖) :
     Continuous (comap R f hf) :=
   (continuous_iff_eval R).2 fun a ↦ continuous_eval S (f a)
 
@@ -771,7 +773,7 @@ private noncomputable def homeomorphRigid :
   continuous_invFun := (Rigid.BerkovichSpectrum.continuous_iff_eval R).2 fun a ↦
     continuous_eval R a
 
-/-- The Berkovich spectrum of every normed ring is compact. -/
+/-- The Berkovich spectrum of every seminormed ring is compact. -/
 theorem isCompact_univ : IsCompact (Set.univ : Set (BerkovichSpectrum R)) := by
   have h := ((homeomorphRigid R).isCompact_image (s := Set.univ)).2
     (Rigid.BerkovichSpectrum.isCompact_univ R)
@@ -786,9 +788,9 @@ end BerkovichSpectrum
 
 namespace BerkovichSpectrum
 
-/-- A bounded multiplicative seminorm on a nonarchimedean commutative normed ring is
+/-- A bounded multiplicative seminorm on a nonarchimedean commutative seminormed ring is
 nonarchimedean. -/
-theorem map_add_le_max {R : Type v} [NormedCommRing R] [IsUltrametricDist R]
+theorem map_add_le_max {R : Type v} [SeminormedCommRing R] [IsUltrametricDist R]
     (x : BerkovichSpectrum R) (a b : R) : x (a + b) ≤ max (x a) (x b) := by
   simpa [homeomorphRigid] using
     Rigid.BerkovichSpectrum.map_add_le_max ((homeomorphRigid R).symm x) a b
