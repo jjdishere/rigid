@@ -493,7 +493,20 @@ theorem exists_equivalent_quotientNorm_presentation_of_isAffinoidAlgebra
     (A : Type v) [NormedCommRing A] [NormedAlgebra K A] [CompleteSpace A]
     [IsUltrametricDist A] (hA : IsAffinoidAlgebra K A) :
     ∃ (n : ℕ) (π : ContinuousAlgHom K (TateAlgebra K (Fin n)) A),
-      IsEquivalentQuotientNorm (π : TateAlgebra K (Fin n) → A) := sorry
+      IsEquivalentQuotientNorm (π : TateAlgebra K (Fin n) → A) := by
+  let P := hA.presentation
+  let π : ContinuousAlgHom K (TateAlgebra K (Fin P.n)) A :=
+    { toAlgHom := P.toAlgHom
+      cont := by
+        change @Continuous (TateAlgebra K (Fin P.n)) A
+          (inferInstance : TopologicalSpace (TateAlgebra K (Fin P.n)))
+          (inferInstance : TopologicalSpace A) P.toAlgHom
+        rw [topology_eq_affinoidTopology_of_isAffinoidAlgebra K A hA,
+          affinoidTopology_eq_residueTopology K A hA P]
+        exact continuous_coinduced_rng }
+  exact ⟨P.n, π,
+    isEquivalentQuotientNorm_of_surjective_continuousAlgHom π
+      (AffinoidPresentation.toAlgHom_surjective K A P)⟩
 
 /-- Every algebra homomorphism between complete normed realizations of strict affinoid algebras is
 continuous. -/
@@ -501,7 +514,12 @@ theorem continuous_of_isAffinoidAlgebra
     {A : Type v} [NormedCommRing A] [NormedAlgebra K A] [CompleteSpace A]
     [IsUltrametricDist A] {B : Type w} [NormedCommRing B] [NormedAlgebra K B]
     [CompleteSpace B] [IsUltrametricDist B] (hA : IsAffinoidAlgebra K A)
-    (hB : IsAffinoidAlgebra K B) (f : A →ₐ[K] B) : Continuous f := sorry
+    (hB : IsAffinoidAlgebra K B) (f : A →ₐ[K] B) : Continuous f := by
+  change @Continuous A B (inferInstance : TopologicalSpace A)
+    (inferInstance : TopologicalSpace B) f
+  rw [topology_eq_affinoidTopology_of_isAffinoidAlgebra K A hA,
+    topology_eq_affinoidTopology_of_isAffinoidAlgebra K B hB]
+  exact continuous_for_affinoidTopology_of_isAffinoidAlgebra K hA hB f
 
 end BanachRealization
 
