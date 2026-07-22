@@ -85,6 +85,10 @@ private theorem tateAlgebra_ideal_isClosed {n : ℕ}
       _ ≤ ‖S - R‖ := norm_coeff_le_norm K (Fin n) (S - R) (leadingDegree m S)
   exact (not_lt_of_ge (hSnorm ▸ hcoeff) hSR).elim
 
+theorem isClosed_tateAlgebra_ideal {n : ℕ}
+    (I : Ideal (TateAlgebra K (Fin n))) : IsClosed (I : Set (TateAlgebra K (Fin n))) :=
+  tateAlgebra_ideal_isClosed K I
+
 private noncomputable def pushForwardPresentation
     {A : Type v} [CommRing A] [Algebra K A]
     {B : Type w} [CommRing B] [Algebra K B]
