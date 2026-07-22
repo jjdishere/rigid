@@ -1,33 +1,60 @@
-import Rigid.RigidSpace.AdmissibleTopology
+import Rigid.AffinoidAlgebra.MaximalSpectrum
+import Rigid.RigidSpace.StructureSheaf
 
 set_option linter.style.header false
 
 /-!
-# Rigid spaces: point-set foundations
+# Rigid spaces
 
-This module supplies the point-set layer of a rigid space. A space has a type of analytic points
-and a Tate admissible topology on those points. At this stage morphisms remember their map on
-points; the later locally ringed-space layer enriches that map with pullbacks on functions.
+This module defines a rigid space as an admissible locally ringed space which is locally modeled on
+maximal spectra of strict affinoid algebras.
 -/
 
-open CategoryTheory CategoryTheory.Limits
+open CategoryTheory
 
 universe u
 
 namespace Rigid
 
-/-- The point-set data underlying a rigid analytic space. -/
-structure RigidSpaceCore where
+variable (K : Type u) [NontriviallyNormedField K] [CompleteSpace K] [IsUltrametricDist K]
+
+/-- A locally ringed space for Tate's admissible topology. -/
+structure AdmissibleLocallyRingedSpace where
   /-- The analytic points of the space. -/
   points : Type u
-  /-- The admissible topology on analytic points. -/
+  /-- Tate's admissible topology on the analytic points. -/
   admissibleTopology : AdmissibleTopology points
+  /-- The presheaf of analytic `K`-algebras. -/
+  structurePresheaf : AdmissiblePresheaf K admissibleTopology
+  /-- Analytic functions form a sheaf and all stalks are local rings. -/
+  isStructureSheaf : structurePresheaf.IsStructureSheaf
 
-/-- Rigid spaces over a base field. The current point-set layer is independent of the chosen base;
-the structure-sheaf layer records its `K`-algebra structure. -/
-abbrev RigidSpace
-    (K : Type u) [NontriviallyNormedField K] [CompleteSpace K] [IsUltrametricDist K] :
-    Type (u + 1) := RigidSpaceCore.{u}
+/-- An affinoid chart around a point of an admissible locally ringed space. The chart identifies
+its points with the maximal spectrum of a strict affinoid algebra and its analytic functions with
+that algebra. -/
+structure AffinoidChart (X : AdmissibleLocallyRingedSpace K) (x : X.points) where
+  /-- The admissible neighborhood underlying the chart. -/
+  domain : X.admissibleTopology.Open
+  /-- The center belongs to the chart. -/
+  mem : x ∈ (domain : Set X.points)
+  /-- The coordinate algebra of the chart. -/
+  A : Type u
+  [commRing : CommRing A]
+  [algebra : Algebra K A]
+  /-- The coordinate algebra is strictly affinoid over `K`. -/
+  isAffinoid : IsAffinoidAlgebra K A
+  /-- The chart points are the maximal ideals of its coordinate algebra. -/
+  pointsEquiv : ↥(domain : Set X.points) ≃ MaximalSpectrum A
+  /-- Analytic functions on the chart recover its coordinate algebra. -/
+  sectionsEquiv : X.structurePresheaf.Sections domain ≃ₐ[K] A
+
+attribute [instance] AffinoidChart.commRing AffinoidChart.algebra
+
+/-- A rigid analytic space over `K` is an admissible locally ringed space admitting an affinoid
+chart modeled on `MaximalSpectrum A` around every point. -/
+structure RigidSpace extends AdmissibleLocallyRingedSpace K where
+  /-- Every point has an affinoid neighborhood modeled on `MaximalSpectrum A`. -/
+  locallyAffinoid : ∀ x, Nonempty (AffinoidChart K toAdmissibleLocallyRingedSpace x)
 
 namespace RigidSpace
 
@@ -35,95 +62,37 @@ variable (K : Type u) [NontriviallyNormedField K] [CompleteSpace K] [IsUltrametr
 
 /-- A morphism at the point-set layer of rigid spaces. -/
 @[ext]
-structure Hom (X Y : RigidSpaceCore.{u}) : Type (u + 1) where
+structure Hom (X Y : RigidSpace K) : Type (u + 1) where
   /-- The induced function on analytic points. -/
   toFun : X.points → Y.points
 
-instance {X Y : RigidSpaceCore.{u}} : FunLike (Hom X Y) X.points Y.points where
+instance {X Y : RigidSpace K} : FunLike (Hom K X Y) X.points Y.points where
   coe := Hom.toFun
   coe_injective := fun _ _ h ↦ Hom.ext h
 
-instance coreCategory : Category.{u + 1} RigidSpaceCore.{u} where
-  Hom := Hom
+instance category : Category.{u + 1} (RigidSpace K) where
+  Hom := Hom K
   id _ := ⟨id⟩
   comp f g := ⟨g.toFun ∘ f.toFun⟩
   id_comp _ := rfl
   comp_id _ := rfl
   assoc _ _ _ := rfl
 
-namespace Product
-
-/-- The point-set product of two rigid spaces. -/
-def space (X Y : RigidSpaceCore.{u}) : RigidSpaceCore.{u} where
-  points := X.points × Y.points
-  admissibleTopology := AdmissibleTopology.fine _
-
-/-- The first projection from a point-set product. -/
-def fst (X Y : RigidSpaceCore.{u}) : space X Y ⟶ X :=
-  ⟨Prod.fst⟩
-
-/-- The second projection from a point-set product. -/
-def snd (X Y : RigidSpaceCore.{u}) : space X Y ⟶ Y :=
-  ⟨Prod.snd⟩
-
-/-- Pair two point maps into the point-set product. -/
-def lift {W X Y : RigidSpaceCore.{u}} (f : W ⟶ X) (g : W ⟶ Y) : W ⟶ space X Y :=
-  ⟨fun w ↦ (f.toFun w, g.toFun w)⟩
-
-private theorem lift_fst {W X Y : RigidSpaceCore.{u}} (f : W ⟶ X) (g : W ⟶ Y) :
-    lift f g ≫ fst X Y = f :=
-  rfl
-
-private theorem lift_snd {W X Y : RigidSpaceCore.{u}} (f : W ⟶ X) (g : W ⟶ Y) :
-    lift f g ≫ snd X Y = g :=
-  rfl
-
-private theorem lift_unique {W X Y : RigidSpaceCore.{u}} (f : W ⟶ X) (g : W ⟶ Y)
-    (m : W ⟶ space X Y) (hfst : m ≫ fst X Y = f) (hsnd : m ≫ snd X Y = g) :
-    m = lift f g := by
-  apply Hom.ext
-  funext w
-  exact Prod.ext (congr_fun (congrArg Hom.toFun hfst) w)
-    (congr_fun (congrArg Hom.toFun hsnd) w)
-
-/-- The chosen point-set product is a categorical binary product. -/
-def limitCone (X Y : RigidSpaceCore.{u}) : LimitCone (pair X Y) where
-  cone := BinaryFan.mk (fst X Y) (snd X Y)
-  isLimit := BinaryFan.IsLimit.mk _ lift lift_fst lift_snd lift_unique
-
-end Product
-
-instance hasLimitPairCore (X Y : RigidSpaceCore.{u}) : HasLimit (pair X Y) :=
-  HasLimit.mk (Product.limitCone X Y)
-
-instance hasBinaryProductsCore : HasBinaryProducts RigidSpaceCore.{u} :=
-  hasBinaryProducts_of_hasLimit_pair _
-
-/-- The category structure used on rigid spaces over `K`. -/
-@[reducible]
-def category : Category.{u + 1} (RigidSpace K) :=
-  coreCategory
-
-/-- Rigid spaces admit binary products at the point-set layer. -/
-theorem hasBinaryProducts : HasBinaryProducts (RigidSpace K) :=
-  hasBinaryProductsCore
-
-/-- The uniform point universe used by the current global-space interface. -/
-abbrev PointType : Type (u + 1) := ULift.{u + 1, 0} PUnit
-
-/-- The point type attached to a rigid space. The object-specific point-set presentation remains
-in `RigidSpaceCore` for later locally ringed refinements. -/
-abbrev Point (_X : RigidSpace K) : Type (u + 1) := PointType
+/-- The type of analytic points, lifted to the public universe of the global-space interface. -/
+abbrev Point (X : RigidSpace K) : Type (u + 1) := ULift.{u + 1, u} X.points
 
 namespace Point
 
 /-- The map on analytic points induced by a rigid-space morphism. -/
-def map {X Y : RigidSpace K} (_f : X ⟶ Y) : Point K X → Point K Y :=
-  id
+def map {X Y : RigidSpace K} (f : X ⟶ Y) : Point K X → Point K Y :=
+  fun x ↦ ⟨f.toFun x.down⟩
 
 @[simp]
 theorem map_id (X : RigidSpace K) : map K (𝟙 X) = id :=
-  rfl
+  by
+    funext x
+    cases x
+    rfl
 
 @[simp]
 theorem map_comp {X Y Z : RigidSpace K} (f : X ⟶ Y) (g : Y ⟶ Z) :

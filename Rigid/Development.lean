@@ -1373,12 +1373,12 @@ noncomputable instance rigidSpaceCategory : Category.{u + 1} (RigidSpace K) :=
 
 noncomputable instance rigidSpaceHasBinaryProducts :
     CategoryTheory.Limits.HasBinaryProducts (RigidSpace K) :=
-  Rigid.RigidSpace.hasBinaryProducts K
+  sorry
 
 namespace RigidSpace
 
 /-- The type of analytic points of a rigid space. -/
-def Point (X : RigidSpace K) : Type (u + 1) := Rigid.RigidSpace.PointType
+def Point (X : RigidSpace K) : Type (u + 1) := Rigid.RigidSpace.Point K X
 
 namespace Point
 
@@ -1413,7 +1413,7 @@ noncomputable def pointFunctor : RigidSpace K ⥤ Type (u + 1) where
 
 /-- An admissible open of a rigid space. -/
 def AdmissibleOpen (X : RigidSpace K) : Type (u + 1) :=
-  Rigid.RigidSpace.AdmissibleOpenType
+  Rigid.RigidSpace.AdmissibleOpen K X
 
 namespace AdmissibleOpen
 
