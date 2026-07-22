@@ -693,6 +693,63 @@ noncomputable instance berkovichSpectrumOverCompactSpace [CompleteSpace A]
 theorem map_add_le_max (x : BerkovichSpectrumOver K A) (a b : A) :
     x (a + b) ≤ max (x a) (x b) := sorry
 
+noncomputable instance kernelIsPrime (x : BerkovichSpectrumOver K A) : x.kernel.IsPrime :=
+  x.kernel_isPrime
+
+/-- The integral residue domain obtained by quotienting by the point's prime kernel. -/
+abbrev ResidueDomain (x : BerkovichSpectrumOver K A) := A ⧸ x.kernel
+
+/-- The fraction field of the integral residue domain. -/
+abbrev ResidueFractionField (x : BerkovichSpectrumOver K A) :=
+  FractionRing (ResidueDomain K A x)
+
+noncomputable instance residueFractionNormedField (x : BerkovichSpectrumOver K A) :
+    NormedField (ResidueFractionField K A x) := sorry
+
+noncomputable instance residueFractionIsUltrametricDist (x : BerkovichSpectrumOver K A) :
+    IsUltrametricDist (ResidueFractionField K A x) := sorry
+
+/-- The completed residue field of a relative Berkovich point. -/
+abbrev CompletedResidueField (x : BerkovichSpectrumOver K A) :=
+  UniformSpace.Completion (ResidueFractionField K A x)
+
+noncomputable instance completedResidueIsUltrametricDist (x : BerkovichSpectrumOver K A) :
+    IsUltrametricDist (CompletedResidueField K A x) := sorry
+
+/-- The canonical map from the original algebra to the residue fraction field. -/
+noncomputable def residueFractionMap (x : BerkovichSpectrumOver K A) :
+    A →+* ResidueFractionField K A x := sorry
+
+/-- The canonical evaluation map from the algebra to the completed residue field. -/
+noncomputable def completedResidueMap (x : BerkovichSpectrumOver K A) :
+    A →+* CompletedResidueField K A x := sorry
+
+@[simp]
+theorem norm_completedResidueMap (x : BerkovichSpectrumOver K A) (a : A) :
+    ‖completedResidueMap K A x a‖ = x a := sorry
+
+noncomputable instance completedResidueAlgebra (x : BerkovichSpectrumOver K A) :
+    Algebra K (CompletedResidueField K A x) := sorry
+
+noncomputable instance completedResidueNormedAlgebra (x : BerkovichSpectrumOver K A) :
+    NormedAlgebra K (CompletedResidueField K A x) := sorry
+
+noncomputable instance completedResidueNontriviallyNormedField
+    (x : BerkovichSpectrumOver K A) :
+    NontriviallyNormedField (CompletedResidueField K A x) := sorry
+
+/-- The completed residue evaluation as a `K`-algebra homomorphism. -/
+noncomputable def completedResidueAlgHom (x : BerkovichSpectrumOver K A) :
+    A →ₐ[K] CompletedResidueField K A x := sorry
+
+@[simp]
+theorem norm_completedResidueAlgHom (x : BerkovichSpectrumOver K A) (a : A) :
+    ‖completedResidueAlgHom K A x a‖ = x a := sorry
+
+@[simp]
+theorem ker_completedResidueMap (x : BerkovichSpectrumOver K A) :
+    RingHom.ker (completedResidueMap K A x) = x.kernel := sorry
+
 end BerkovichSpectrumOver
 
 /-- The Berkovich spectrum of a nonzero nonarchimedean commutative normed ring is nonempty. -/

@@ -4,6 +4,7 @@ import Rigid.AffinoidAlgebra.QuotientNorm
 import Rigid.AffinoidAlgebra.QuotientTopology
 import Rigid.AffinoidAlgebra.RationalDatum
 import Rigid.Berkovich.Spectrum
+import Rigid.Berkovich.CompletedResidue
 import Rigid.Berkovich.GeneralSmoothing
 import Rigid.Berkovich.Nonempty
 import Rigid.Berkovich.RelativeSpectrum

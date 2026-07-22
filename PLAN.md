@@ -119,7 +119,9 @@ geometric objects.
 4. Define the relative spectrum over the ground field. **Done** (`Berkovich/RelativeSpectrum`): it
    is the closed compact Hausdorff subspace where seminorms restrict to the norm on `K`, with
    continuous contravariant pullback.
-5. Define completed residue fields and evaluation maps.
+5. Define completed residue fields and evaluation maps. **Done**
+   (`Berkovich/CompletedResidue`): quotient by the prime kernel, extend the valuation to the
+   fraction field, complete, and recover the point seminorm as the norm of evaluation.
 6. Define affinoid domains and analytic functions.
 7. Build Berkovich spaces from affinoid atlases, then define good, strict, Hausdorff, and
    paracompact objects and analytic morphisms.
@@ -175,6 +177,8 @@ Rigid/
   RigidSpace/Basic.lean
   RigidSpace/Gluing.lean
   Berkovich/Spectrum.lean
+  Berkovich/RelativeSpectrum.lean
+  Berkovich/CompletedResidue.lean
   Berkovich/GeneralSmoothing.lean
   Berkovich/Nonempty.lean
   Berkovich/Space.lean
