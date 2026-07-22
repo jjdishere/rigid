@@ -336,7 +336,16 @@ noncomputable def residueTopology (P : AffinoidPresentation K A) : TopologicalSp
 
 /-- The quotient topology of an affinoid algebra is independent of its presentation. -/
 theorem residueTopology_eq (P Q : AffinoidPresentation K A) :
-    P.residueTopology = Q.residueTopology := sorry
+    P.residueTopology = Q.residueTopology := by
+  apply le_antisymm
+  · have h : @Continuous A A P.residueTopology Q.residueTopology (AlgHom.id K A) :=
+      Rigid.continuous_for_affinoidPresentationData K
+        P.ideal P.equiv Q.ideal Q.equiv (AlgHom.id K A)
+    rwa [continuous_iff_coinduced_le] at h
+  · have h : @Continuous A A Q.residueTopology P.residueTopology (AlgHom.id K A) :=
+      Rigid.continuous_for_affinoidPresentationData K
+        Q.ideal Q.equiv P.ideal P.equiv (AlgHom.id K A)
+    rwa [continuous_iff_coinduced_le] at h
 
 /-- The quotient topology makes the target a topological ring. -/
 theorem residueIsTopologicalRing (P : AffinoidPresentation K A) :
