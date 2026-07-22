@@ -310,13 +310,17 @@ theorem residueContinuousSMul (P : AffinoidPresentation K A) :
 structure. Unlike the induced topology, this norm can depend on the presentation. -/
 @[reducible]
 noncomputable def residueNormedCommRing (P : AffinoidPresentation K A) :
-    NormedCommRing A := sorry
+    NormedCommRing A :=
+  NormedCommRing.induced A K (sorry : A →+* K) (by sorry)
 
 /-- The residue norm makes the target a normed algebra over the ground field. -/
 @[reducible]
 noncomputable def residueNormedAlgebra (P : AffinoidPresentation K A) :
     letI := P.residueNormedCommRing
-    NormedAlgebra K A := sorry
+    NormedAlgebra K A :=
+  letI : NormedCommRing A := residueNormedCommRing K A P
+  { (inferInstance : Algebra K A) with
+    norm_smul_le := by sorry }
 
 /-- The scalar embedding of the residue normed algebra agrees with the presentation map applied to
 constant Tate series. -/
