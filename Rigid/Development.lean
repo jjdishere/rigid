@@ -36,9 +36,9 @@ algebras. The intended construction order is:
 
 The global comparison interface follows Theorem 1.6.1 of Vladimir Berkovich, *Étale cohomology
 for non-Archimedean analytic spaces*, Publ. Math. IHÉS 78 (1993), 5–161. The canonical functor from
-Hausdorff strict Berkovich spaces to quasi-separated rigid spaces is fully faithful, and restricts to
-an equivalence between paracompact strict Berkovich spaces and quasi-separated rigid spaces with an
-admissible affinoid cover of finite type. The interfaces include geometric characterizations,
+Hausdorff strict Berkovich spaces to quasi-separated rigid spaces is fully faithful, and restricts
+to an equivalence between paracompact strict Berkovich spaces and quasi-separated rigid spaces with
+an admissible affinoid cover of finite type. The interfaces include geometric characterizations,
 affinoid examples, isomorphism invariance, and nonvacuity conditions to constrain shortcut models.
 -/
 
@@ -73,7 +73,7 @@ noncomputable def tateVariable (i : ι) : TateAlgebra K ι :=
 ring. This characterizes `tateVariable` without finiteness or completeness assumptions. -/
 @[simp]
 theorem coe_tateVariable (i : ι) :
-    (tateVariable K ι i : MvPowerSeries ι K) = MvPowerSeries.X i := sorry
+    (tateVariable K ι i : MvPowerSeries ι K) = MvPowerSeries.X i := rfl
 
 /-- The Gauss norm, i.e. the supremum of the norms of the coefficients. -/
 noncomputable def gaussNorm : TateAlgebra K ι → ℝ :=
@@ -84,7 +84,8 @@ noncomputable def gaussNorm : TateAlgebra K ι → ℝ :=
 variable type. -/
 theorem gaussNorm_eq_sSup_coeff (f : TateAlgebra K ι) :
     gaussNorm K ι f =
-      sSup (Set.range fun n : ι →₀ ℕ ↦ ‖MvPowerSeries.coeff n f.1‖) := sorry
+      sSup (Set.range fun n : ι →₀ ℕ ↦ ‖MvPowerSeries.coeff n f.1‖) := rfl
+
 noncomputable instance tateAlgebraNorm : Norm (TateAlgebra K ι) :=
   ⟨gaussNorm K ι⟩
 
@@ -104,12 +105,13 @@ noncomputable instance tateAlgebraIsUltrametricDist : IsUltrametricDist (TateAlg
 /-- The constant coefficient of a scalar in the Tate algebra is that scalar. -/
 @[simp]
 theorem coeff_zero_algebraMap (r : K) :
-    MvPowerSeries.coeff 0 (algebraMap K (TateAlgebra K ι) r).1 = r := sorry
+    MvPowerSeries.coeff 0 (algebraMap K (TateAlgebra K ι) r).1 = r := rfl
 
 /-- Every nonconstant coefficient of a scalar in the Tate algebra vanishes. -/
 @[simp]
 theorem coeff_algebraMap_of_ne_zero (r : K) {n : ι →₀ ℕ} (hn : n ≠ 0) :
     MvPowerSeries.coeff n (algebraMap K (TateAlgebra K ι) r).1 = 0 := sorry
+
 variable [hι : Finite ι]
 
 include hι

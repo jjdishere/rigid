@@ -22,9 +22,9 @@ algebras. The intended construction order is:
 
 The global comparison interface follows Theorem 1.6.1 of Vladimir Berkovich, *Étale cohomology
 for non-Archimedean analytic spaces*, Publ. Math. IHÉS 78 (1993), 5–161. The canonical functor from
-Hausdorff strict Berkovich spaces to quasi-separated rigid spaces is fully faithful, and restricts to
-an equivalence between paracompact strict Berkovich spaces and quasi-separated rigid spaces with an
-admissible affinoid cover of finite type. The interfaces include geometric characterizations,
+Hausdorff strict Berkovich spaces to quasi-separated rigid spaces is fully faithful, and restricts
+to an equivalence between paracompact strict Berkovich spaces and quasi-separated rigid spaces with
+an admissible affinoid cover of finite type. The interfaces include geometric characterizations,
 affinoid examples, isomorphism invariance, and nonvacuity conditions to constrain shortcut models.
 -/
 
