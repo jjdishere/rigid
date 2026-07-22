@@ -2060,40 +2060,44 @@ noncomputable def pointsRestrictToAffinoidDomainHomeomorph {X : BerkovichSpace K
     (U : AffinoidDomain K X) :
     Point K (restrictToAffinoidDomain K U) ≃ₜ ↥U.carrier := sorry
 /-- Every point has an affinoid neighborhood. -/
-def IsGood (X : BerkovichSpace K) : Prop := sorry
+def IsGood (X : BerkovichSpace K) : Prop :=
+  ∀ x : Point K X, ∃ U : AffinoidDomain K X, x ∈ interior U.carrier
 
 /-- The analytic atlas uses strict affinoid algebras. -/
-def IsStrict (X : BerkovichSpace K) : Prop := sorry
+def IsStrict (X : BerkovichSpace K) : Prop :=
+  ∀ x : Point K X, ∃ U : AffinoidDomain K X, x ∈ U.carrier ∧ U.IsStrict
 
 /-- The underlying topological space is Hausdorff and paracompact.
 
 Berkovich's convention in the source comparison theorem includes Hausdorffness in the word
 `paracompact`; Mathlib's `ParacompactSpace` does not. -/
-def IsParacompact (X : BerkovichSpace K) : Prop := sorry
+def IsParacompact (X : BerkovichSpace K) : Prop :=
+  T2Space (Point K X) ∧ ParacompactSpace (Point K X)
 
 /-- The underlying topological space is Hausdorff. -/
-def IsHausdorff (X : BerkovichSpace K) : Prop := sorry
+def IsHausdorff (X : BerkovichSpace K) : Prop :=
+  T2Space (Point K X)
 
 /-- Goodness means that every point lies in the interior of an affinoid domain. -/
 theorem isGood_iff (X : BerkovichSpace K) :
-    IsGood K X ↔ ∀ x : Point K X, ∃ U : AffinoidDomain K X, x ∈ interior U.carrier := sorry
+    IsGood K X ↔ ∀ x : Point K X, ∃ U : AffinoidDomain K X, x ∈ interior U.carrier := Iff.rfl
 
 /-- Strictness means that every point belongs to a strict affinoid domain. -/
 theorem isStrict_iff (X : BerkovichSpace K) :
     IsStrict K X ↔ ∀ x : Point K X, ∃ U : AffinoidDomain K X,
-      x ∈ U.carrier ∧ U.IsStrict := sorry
+      x ∈ U.carrier ∧ U.IsStrict := Iff.rfl
 
 /-- Berkovich paracompactness agrees with Hausdorff paracompactness of the point topology. -/
 theorem isParacompact_iff (X : BerkovichSpace K) :
-    IsParacompact K X ↔ T2Space (Point K X) ∧ ParacompactSpace (Point K X) := sorry
+    IsParacompact K X ↔ T2Space (Point K X) ∧ ParacompactSpace (Point K X) := Iff.rfl
 
 /-- Berkovich Hausdorffness agrees with the Hausdorff property of the point-set topology. -/
 theorem isHausdorff_iff (X : BerkovichSpace K) :
-    IsHausdorff K X ↔ T2Space (Point K X) := sorry
+    IsHausdorff K X ↔ T2Space (Point K X) := Iff.rfl
 
 /-- A paracompact Berkovich space is Hausdorff under the source convention. -/
 theorem isHausdorff_of_isParacompact {X : BerkovichSpace K} (hX : IsParacompact K X) :
-    IsHausdorff K X := sorry
+    IsHausdorff K X := hX.1
 
 /-- Goodness is invariant under analytic isomorphism. -/
 theorem isGood_iff_of_iso {X Y : BerkovichSpace K} (e : X ≅ Y) :
@@ -2105,11 +2109,31 @@ theorem isStrict_iff_of_iso {X Y : BerkovichSpace K} (e : X ≅ Y) :
 
 /-- Paracompactness is invariant under analytic isomorphism. -/
 theorem isParacompact_iff_of_iso {X Y : BerkovichSpace K} (e : X ≅ Y) :
-    IsParacompact K X ↔ IsParacompact K Y := sorry
+    IsParacompact K X ↔ IsParacompact K Y := by
+  let h := Point.homeomorphOfIso K e
+  constructor
+  · rintro ⟨hT2, hpara⟩
+    letI := hT2
+    exact ⟨h.t2Space, h.paracompactSpace_iff.mp hpara⟩
+  · rintro ⟨hT2, hpara⟩
+    letI := hT2
+    exact ⟨h.symm.t2Space, h.paracompactSpace_iff.mpr hpara⟩
 
 /-- Hausdorffness is invariant under analytic isomorphism. -/
 theorem isHausdorff_iff_of_iso {X Y : BerkovichSpace K} (e : X ≅ Y) :
-    IsHausdorff K X ↔ IsHausdorff K Y := sorry
+    IsHausdorff K X ↔ IsHausdorff K Y := by
+  let h := Point.homeomorphOfIso K e
+  constructor
+  · intro hT2
+    change T2Space (Point K X) at hT2
+    change T2Space (Point K Y)
+    letI := hT2
+    exact h.t2Space
+  · intro hT2
+    change T2Space (Point K Y) at hT2
+    change T2Space (Point K X)
+    letI := hT2
+    exact h.symm.t2Space
 
 /-- The Berkovich space associated to a strict affinoid algebra. -/
 noncomputable def ofAffinoid {A : Type v} [CommRing A] [Algebra K A]
@@ -2234,7 +2258,8 @@ theorem isParacompact_ofAffinoid {A : Type v} [CommRing A] [Algebra K A]
 
 /-- An affinoid Berkovich space is Hausdorff. -/
 theorem isHausdorff_ofAffinoid {A : Type v} [CommRing A] [Algebra K A]
-    (hA : IsAffinoidAlgebra K A) : IsHausdorff K (ofAffinoid K hA) := sorry
+    (hA : IsAffinoidAlgebra K A) : IsHausdorff K (ofAffinoid K hA) :=
+  isHausdorff_of_isParacompact K (isParacompact_ofAffinoid K hA)
 
 end BerkovichSpace
 
