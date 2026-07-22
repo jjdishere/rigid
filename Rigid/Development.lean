@@ -1580,30 +1580,61 @@ structure AnalyticMorphismData (X Y : RigidSpace K) where
 namespace AnalyticMorphismData
 
 /-- Identity analytic-morphism data. -/
-noncomputable def id (X : RigidSpace K) : AnalyticMorphismData K X X := sorry
+noncomputable def id (X : RigidSpace K) : AnalyticMorphismData K X X where
+  base x := x
+  preimage U := U
+  mem_preimage _ _ := Iff.rfl
+  preimage_mono h := h
+  pullback U := AlgHom.id K (StructureSheaf.Sections K U)
+  pullback_restriction := by
+    intros
+    rw [AlgHom.comp_id, AlgHom.id_comp]
+  stalkMap x := AlgHom.id K (StructureSheaf.Stalk K X x)
+  stalkMap_isLocal _ := ⟨fun _ h => by simpa only [AlgHom.id_apply] using h⟩
+  pullback_germ := by
+    intros
+    rfl
 
 /-- Composition of analytic-morphism data. -/
 noncomputable def comp {X Y Z : RigidSpace K}
     (f : AnalyticMorphismData K X Y) (g : AnalyticMorphismData K Y Z) :
-    AnalyticMorphismData K X Z := sorry
+    AnalyticMorphismData K X Z where
+  base x := g.base (f.base x)
+  preimage U := f.preimage (g.preimage U)
+  mem_preimage x U := (f.mem_preimage x (g.preimage U)).trans (g.mem_preimage (f.base x) U)
+  preimage_mono h := f.preimage_mono (g.preimage_mono h)
+  pullback U := (f.pullback (g.preimage U)).comp (g.pullback U)
+  pullback_restriction := by
+    intro U V hUV
+    rw [← AlgHom.comp_assoc, f.pullback_restriction (g.preimage_mono hUV),
+      AlgHom.comp_assoc, g.pullback_restriction hUV, ← AlgHom.comp_assoc]
+  stalkMap x := (f.stalkMap x).comp (g.stalkMap (f.base x))
+  stalkMap_isLocal x := by
+    refine ⟨fun a ha => ?_⟩
+    exact (g.stalkMap_isLocal (f.base x)).map_nonunit a
+      ((f.stalkMap_isLocal x).map_nonunit _ ha)
+  pullback_germ := by
+    intro x U hx s
+    simp only [AlgHom.comp_apply]
+    rw [g.pullback_germ, f.pullback_germ]
 
 @[simp]
-theorem id_base (X : RigidSpace K) : (id K X).base = _root_.id := sorry
+theorem id_base (X : RigidSpace K) : (id K X).base = _root_.id := rfl
 
 @[simp]
 theorem id_preimage (X : RigidSpace K) (U : AdmissibleOpen K X) :
-    (id K X).preimage U = U := sorry
+    (id K X).preimage U = U := rfl
 
 @[simp]
 theorem comp_base {X Y Z : RigidSpace K}
     (f : AnalyticMorphismData K X Y) (g : AnalyticMorphismData K Y Z) :
-    (comp K f g).base = g.base ∘ f.base := sorry
+    (comp K f g).base = g.base ∘ f.base := rfl
 
 @[simp]
 theorem comp_preimage {X Y Z : RigidSpace K}
     (f : AnalyticMorphismData K X Y) (g : AnalyticMorphismData K Y Z)
     (U : AdmissibleOpen K Z) :
-    (comp K f g).preimage U = f.preimage (g.preimage U) := sorry
+    (comp K f g).preimage U = f.preimage (g.preimage U) := rfl
 
 end AnalyticMorphismData
 
@@ -2004,29 +2035,62 @@ structure AnalyticMorphismData (X Y : BerkovichSpace K) where
 
 namespace AnalyticMorphismData
 
-noncomputable def id (X : BerkovichSpace K) : AnalyticMorphismData K X X := sorry
+noncomputable def id (X : BerkovichSpace K) : AnalyticMorphismData K X X where
+  base x := x
+  continuous_base := continuous_id
+  preimage U := U
+  mem_preimage _ _ := Iff.rfl
+  preimage_mono h := h
+  pullback U := AlgHom.id K (StructureSheaf.Sections K U)
+  pullback_restriction := by
+    intros
+    rw [AlgHom.comp_id, AlgHom.id_comp]
+  stalkMap x := AlgHom.id K (StructureSheaf.Stalk K X x)
+  stalkMap_isLocal _ := ⟨fun _ h => by simpa only [AlgHom.id_apply] using h⟩
+  pullback_germ := by
+    intros
+    rfl
 
 noncomputable def comp {X Y Z : BerkovichSpace K}
     (f : AnalyticMorphismData K X Y) (g : AnalyticMorphismData K Y Z) :
-    AnalyticMorphismData K X Z := sorry
+    AnalyticMorphismData K X Z where
+  base x := g.base (f.base x)
+  continuous_base := g.continuous_base.comp f.continuous_base
+  preimage U := f.preimage (g.preimage U)
+  mem_preimage x U := (f.mem_preimage x (g.preimage U)).trans (g.mem_preimage (f.base x) U)
+  preimage_mono h := f.preimage_mono (g.preimage_mono h)
+  pullback U := (f.pullback (g.preimage U)).comp (g.pullback U)
+  pullback_restriction := by
+    intro U V hUV
+    rw [← AlgHom.comp_assoc, f.pullback_restriction (g.preimage_mono hUV),
+      AlgHom.comp_assoc, g.pullback_restriction hUV, ← AlgHom.comp_assoc]
+  stalkMap x := (f.stalkMap x).comp (g.stalkMap (f.base x))
+  stalkMap_isLocal x := by
+    refine ⟨fun a ha => ?_⟩
+    exact (g.stalkMap_isLocal (f.base x)).map_nonunit a
+      ((f.stalkMap_isLocal x).map_nonunit _ ha)
+  pullback_germ := by
+    intro x U hx s
+    simp only [AlgHom.comp_apply]
+    rw [g.pullback_germ, f.pullback_germ]
 
 @[simp]
-theorem id_base (X : BerkovichSpace K) : (id K X).base = _root_.id := sorry
+theorem id_base (X : BerkovichSpace K) : (id K X).base = _root_.id := rfl
 
 @[simp]
 theorem id_preimage (X : BerkovichSpace K)
-    (U : TopologicalSpace.Opens (Point K X)) : (id K X).preimage U = U := sorry
+    (U : TopologicalSpace.Opens (Point K X)) : (id K X).preimage U = U := rfl
 
 @[simp]
 theorem comp_base {X Y Z : BerkovichSpace K}
     (f : AnalyticMorphismData K X Y) (g : AnalyticMorphismData K Y Z) :
-    (comp K f g).base = g.base ∘ f.base := sorry
+    (comp K f g).base = g.base ∘ f.base := rfl
 
 @[simp]
 theorem comp_preimage {X Y Z : BerkovichSpace K}
     (f : AnalyticMorphismData K X Y) (g : AnalyticMorphismData K Y Z)
     (U : TopologicalSpace.Opens (Point K Z)) :
-    (comp K f g).preimage U = f.preimage (g.preimage U) := sorry
+    (comp K f g).preimage U = f.preimage (g.preimage U) := rfl
 
 end AnalyticMorphismData
 
