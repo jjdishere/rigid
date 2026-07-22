@@ -1366,7 +1366,9 @@ variable (K : Type u) [NontriviallyNormedField K] [CompleteSpace K] [IsUltrametr
 Grothendieck topology. -/
 def RigidSpace
     (K : Type u) [NontriviallyNormedField K] [CompleteSpace K] [IsUltrametricDist K] :
-    Type (u + 1) := Rigid.RigidSpace K
+  Type (u + 1) := by
+  let _ := K
+  exact Rigid.RigidSpace K
 
 noncomputable instance rigidSpaceCategory : Category.{u + 1} (RigidSpace K) :=
   Rigid.RigidSpace.category K
@@ -1378,7 +1380,9 @@ noncomputable instance rigidSpaceHasBinaryProducts :
 namespace RigidSpace
 
 /-- The type of analytic points of a rigid space. -/
-def Point (X : RigidSpace K) : Type (u + 1) := Rigid.RigidSpace.Point K X
+def Point (X : RigidSpace K) : Type (u + 1) := by
+  let _ := X
+  exact Rigid.RigidSpace.Point K X
 
 namespace Point
 
@@ -1412,8 +1416,9 @@ noncomputable def pointFunctor : RigidSpace K ⥤ Type (u + 1) where
   map_comp f g := by apply TypeCat.homEquiv.injective; exact Point.map_comp K f g
 
 /-- An admissible open of a rigid space. -/
-def AdmissibleOpen (X : RigidSpace K) : Type (u + 1) :=
-  Rigid.RigidSpace.AdmissibleOpen K X
+def AdmissibleOpen (X : RigidSpace K) : Type (u + 1) := by
+  let _ := X
+  exact Rigid.RigidSpace.AdmissibleOpen K X
 
 namespace AdmissibleOpen
 
