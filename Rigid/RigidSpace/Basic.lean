@@ -100,6 +100,16 @@ theorem openEquiv_top {X Y : AdmissibleLocallyRingedSpace K}
     obtain ⟨x, rfl⟩ := e.pointsEquiv.surjective y
     exact (e.mem_openEquiv x (OpenBelow.top K X U)).2 x.2
 
+/-- The section equivalence on the full restricted open, with the target rewritten to the full
+open of the model. -/
+noncomputable def topSectionsEquiv {X Y : AdmissibleLocallyRingedSpace K}
+    {U : X.admissibleTopology.Open} (e : RestrictionIso K X Y U) :
+    X.structurePresheaf.Sections U ≃ₐ[K]
+      Y.structurePresheaf.Sections (AdmissibleTopology.Open.top Y.admissibleTopology) := by
+  let h := e.sectionsEquiv (OpenBelow.top K X U)
+  rw [e.openEquiv_top] at h
+  exact h
+
 end RestrictionIso
 
 end AdmissibleLocallyRingedSpace
@@ -146,6 +156,22 @@ structure RationalDomain (M : AffinoidSpectrumModel K) where
   isRational : IsRationalDatum g f
   /-- The corresponding admissible open of the spectrum model. -/
   domain : M.toAdmissibleLocallyRingedSpace.admissibleTopology.Open
+  /-- The complete admissible locally ringed space underlying the localized spectrum. -/
+  modelSpace : AdmissibleLocallyRingedSpace K
+  /-- The rational domain, with its full admissible site and structure sheaf, is the localized
+  spectrum model. -/
+  restrictionIso :
+    AdmissibleLocallyRingedSpace.RestrictionIso K
+      M.toAdmissibleLocallyRingedSpace modelSpace domain
+  /-- Points of the localized model are maximal ideals of the rational localization. -/
+  modelPointsEquiv :
+    modelSpace.points ≃
+      MaximalSpectrum (AffinoidPresentation.rationalLocalization K M.presentation g f)
+  /-- Global functions of the localized model are its rational localization. -/
+  modelSectionsEquiv :
+    modelSpace.structurePresheaf.Sections
+        (AdmissibleTopology.Open.top modelSpace.admissibleTopology) ≃ₐ[K]
+      AffinoidPresentation.rationalLocalization K M.presentation g f
   /-- Sections on the rational domain are its rational localization. -/
   sectionsEquiv :
     M.toAdmissibleLocallyRingedSpace.structurePresheaf.Sections domain ≃ₐ[K]
@@ -159,6 +185,9 @@ structure RationalDomain (M : AffinoidSpectrumModel K) where
               (Set.subset_univ (domain : Set M.toAdmissibleLocallyRingedSpace.points)))) =
       (AffinoidPresentation.rationalLocalizationMap K M.presentation g f).comp
         M.sectionsEquiv.toAlgHom
+  /-- The direct section equivalence is induced by the full restriction isomorphism. -/
+  sectionsEquiv_model :
+    sectionsEquiv = restrictionIso.topSectionsEquiv.trans modelSectionsEquiv
   /-- Points on the rational domain are the maximal ideals of its localization. -/
   pointsEquiv :
     ↥(domain : Set M.toAdmissibleLocallyRingedSpace.points) ≃
@@ -171,6 +200,9 @@ structure RationalDomain (M : AffinoidSpectrumModel K) where
           (AffinoidPresentation.rationalLocalization_isAffinoid K M.presentation g f)
           (AffinoidPresentation.rationalLocalizationMap K M.presentation g f)
           (pointsEquiv x)
+  /-- The direct point equivalence is induced by the full restriction isomorphism. -/
+  pointsEquiv_model :
+    pointsEquiv = restrictionIso.pointsEquiv.trans modelPointsEquiv
 
 end AffinoidSpectrumModel
 
