@@ -187,6 +187,38 @@ structure AffinoidSpectrumRationalBasis (M : AffinoidSpectrumModel K) where
       M.toAdmissibleLocallyRingedSpace.admissibleTopology
       (fun i : {i : index // (domain i).domain ≤ U} ↦ (domain i.1).domain) U
 
+namespace AffinoidSpectrumRationalBasis
+
+/-- The basis domains refining an admissible open. -/
+def refinement (B : AffinoidSpectrumRationalBasis K M)
+    (U : M.toAdmissibleLocallyRingedSpace.admissibleTopology.Open) :=
+  {i : B.index // (B.domain i).domain ≤ U}
+
+/-- Every point of an admissible open lies in a rational basis domain contained in it. -/
+theorem exists_mem (B : AffinoidSpectrumRationalBasis K M)
+    (U : M.toAdmissibleLocallyRingedSpace.admissibleTopology.Open)
+    {x : M.toAdmissibleLocallyRingedSpace.points} (hx : x ∈ (U : Set _)) :
+    ∃ i : B.index, (B.domain i).domain ≤ U ∧
+      x ∈ ((B.domain i).domain : Set M.toAdmissibleLocallyRingedSpace.points) := by
+  have hUnion := AdmissibleTopology.Open.IsCover.iUnion (B.isCover U)
+  rw [hUnion] at hx
+  rcases Set.mem_iUnion.mp hx with ⟨i, hxi⟩
+  exact ⟨i.1, i.2, hxi⟩
+
+/-- Pairwise overlaps of basis domains admit rational refinements through every point. -/
+theorem exists_mem_inter (B : AffinoidSpectrumRationalBasis K M)
+    {i j : B.index} {x : M.toAdmissibleLocallyRingedSpace.points}
+    (hx : x ∈ ((B.domain i).domain : Set _) ∩ ((B.domain j).domain : Set _)) :
+    ∃ k : B.index, (B.domain k).domain ≤
+        AdmissibleTopology.Open.inter M.toAdmissibleLocallyRingedSpace.admissibleTopology
+          (B.domain i).domain (B.domain j).domain ∧
+      x ∈ ((B.domain k).domain : Set M.toAdmissibleLocallyRingedSpace.points) := by
+  exact AffinoidSpectrumRationalBasis.exists_mem (K := K) (M := M) B
+    (AdmissibleTopology.Open.inter M.toAdmissibleLocallyRingedSpace.admissibleTopology
+      (B.domain i).domain (B.domain j).domain) ⟨hx.1, hx.2⟩
+
+end AffinoidSpectrumRationalBasis
+
 /-- A canonical affinoid spectrum consists of a fully bundled model and its rational basis. -/
 structure CanonicalAffinoidSpectrumModel extends AffinoidSpectrumModel K where
   rationalBasis : AffinoidSpectrumRationalBasis K toAffinoidSpectrumModel
