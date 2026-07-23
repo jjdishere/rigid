@@ -1515,19 +1515,24 @@ end AdmissibleOpen
 namespace StructureSheaf
 
 /-- Analytic functions on an admissible open of a rigid space. -/
-noncomputable abbrev Sections {X : RigidSpace K} (U : AdmissibleOpen K X) : Type u :=
+noncomputable def Sections {X : RigidSpace K} (U : AdmissibleOpen K X) : Type u :=
   X.structurePresheaf.Sections U.down
 
 noncomputable instance sectionsCommRing {X : RigidSpace K} (U : AdmissibleOpen K X) :
-    CommRing (Sections K U) := inferInstance
+    CommRing (Sections K U) := by
+  change CommRing (X.structurePresheaf.Sections U.down)
+  infer_instance
 
 noncomputable instance sectionsAlgebra {X : RigidSpace K} (U : AdmissibleOpen K X) :
-    Algebra K (Sections K U) := inferInstance
+    Algebra K (Sections K U) := by
+  change Algebra K (X.structurePresheaf.Sections U.down)
+  infer_instance
 
 /-- Restriction of analytic functions. -/
 noncomputable def restriction {X : RigidSpace K} {U V : AdmissibleOpen K X}
-    (hUV : U.carrier ⊆ V.carrier) : Sections K V →ₐ[K] Sections K U :=
-  X.structurePresheaf.restriction (by
+    (hUV : U.carrier ⊆ V.carrier) : Sections K V →ₐ[K] Sections K U := by
+  change X.structurePresheaf.Sections V.down →ₐ[K] X.structurePresheaf.Sections U.down
+  exact X.structurePresheaf.restriction (by
     intro x hx
     have hx' : (⟨x⟩ : Point K X) ∈ U.carrier := hx
     exact hUV hx')
@@ -1566,22 +1571,29 @@ theorem existsUnique_glue {X : RigidSpace K} {ι : Type (u + 1)}
   exact hs i j
 
 /-- The local ring of germs at an analytic point. -/
-noncomputable abbrev Stalk (X : RigidSpace K) (x : Point K X) : Type u :=
+noncomputable def Stalk (X : RigidSpace K) (x : Point K X) : Type u :=
   X.structurePresheaf.Stalk x.down
 
 noncomputable instance stalkCommRing (X : RigidSpace K) (x : Point K X) :
-    CommRing (Stalk K X x) := inferInstance
+    CommRing (Stalk K X x) := by
+  change CommRing (X.structurePresheaf.Stalk x.down)
+  infer_instance
 
 noncomputable instance stalkAlgebra (X : RigidSpace K) (x : Point K X) :
-    Algebra K (Stalk K X x) := inferInstance
+    Algebra K (Stalk K X x) := by
+  change Algebra K (X.structurePresheaf.Stalk x.down)
+  infer_instance
 
 noncomputable instance stalkIsLocalRing (X : RigidSpace K) (x : Point K X) :
-    IsLocalRing (Stalk K X x) := X.isStructureSheaf.isLocallyRinged x.down
+    IsLocalRing (Stalk K X x) := by
+  change IsLocalRing (X.structurePresheaf.Stalk x.down)
+  exact X.isStructureSheaf.isLocallyRinged x.down
 
 /-- The germ of a section at a point of its domain. -/
 noncomputable def germ {X : RigidSpace K} {U : AdmissibleOpen K X}
-    {x : Point K X} (hx : x ∈ U.carrier) : Sections K U →ₐ[K] Stalk K X x :=
-  X.structurePresheaf.germ (U := U.down) (x := x.down) hx
+    {x : Point K X} (hx : x ∈ U.carrier) : Sections K U →ₐ[K] Stalk K X x := by
+  change X.structurePresheaf.Sections U.down →ₐ[K] X.structurePresheaf.Stalk x.down
+  exact X.structurePresheaf.germ (U := U.down) (x := x.down) hx
 
 end StructureSheaf
 
