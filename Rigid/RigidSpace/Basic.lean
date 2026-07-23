@@ -29,26 +29,94 @@ structure AdmissibleLocallyRingedSpace where
   /-- Analytic functions form a sheaf and all stalks are local rings. -/
   isStructureSheaf : structurePresheaf.IsStructureSheaf
 
-/-- An affinoid chart around a point of an admissible locally ringed space. The chart identifies
-its points with the maximal spectrum of a strict affinoid algebra and its analytic functions with
-that algebra. -/
-structure AffinoidChart (X : AdmissibleLocallyRingedSpace K) (x : X.points) where
-  /-- The admissible neighborhood underlying the chart. -/
-  domain : X.admissibleTopology.Open
-  /-- The center belongs to the chart. -/
-  mem : x ∈ (domain : Set X.points)
-  /-- The coordinate algebra of the chart. -/
+namespace AdmissibleLocallyRingedSpace
+
+/-- The admissible opens of `X` contained in `U`. These are the opens of the restricted
+admissible site. -/
+def OpenBelow (X : AdmissibleLocallyRingedSpace K) (U : X.admissibleTopology.Open) :=
+  { V : X.admissibleTopology.Open // V ≤ U }
+
+namespace OpenBelow
+
+instance (X : AdmissibleLocallyRingedSpace K) (U : X.admissibleTopology.Open) :
+    PartialOrder (OpenBelow K X U) :=
+  inferInstanceAs (PartialOrder { V : X.admissibleTopology.Open // V ≤ U })
+
+/-- The full open of the restricted admissible site. -/
+def top (X : AdmissibleLocallyRingedSpace K) (U : X.admissibleTopology.Open) :
+    OpenBelow K X U :=
+  ⟨U, le_rfl⟩
+
+end OpenBelow
+
+/-- An isomorphism from the restriction of `X` to `U` onto an admissible locally ringed space.
+
+Unlike a comparison of point sets and global sections, this records the full admissible site and
+the structure sheaf: admissible opens and covers correspond, and the section isomorphisms commute
+with every restriction map. -/
+structure RestrictionIso (X Y : AdmissibleLocallyRingedSpace K)
+    (U : X.admissibleTopology.Open) where
+  /-- Equivalence on analytic points. -/
+  pointsEquiv : ↥(U : Set X.points) ≃ Y.points
+  /-- Equivalence between admissible opens in the restriction and admissible opens of the model. -/
+  openEquiv : OpenBelow K X U ≃ Y.admissibleTopology.Open
+  /-- The equivalence on opens preserves and reflects inclusion. -/
+  openEquiv_le_iff : ∀ V W, openEquiv V ≤ openEquiv W ↔ V ≤ W
+  /-- The equivalences on points and opens preserve membership. -/
+  mem_openEquiv : ∀ (x : ↥(U : Set X.points)) (V : OpenBelow K X U),
+    pointsEquiv x ∈ (openEquiv V : Set Y.points) ↔ x.1 ∈ (V.1 : Set X.points)
+  /-- Admissible covering families correspond. -/
+  isCover_iff : ∀ {I : Type (u + 1)} (V : I → OpenBelow K X U) (W : OpenBelow K X U),
+    AdmissibleTopology.Open.IsCover X.admissibleTopology (fun i ↦ (V i).1) W.1 ↔
+      AdmissibleTopology.Open.IsCover Y.admissibleTopology (fun i ↦ openEquiv (V i))
+        (openEquiv W)
+  /-- Equivalence on analytic sections over every admissible open. -/
+  sectionsEquiv : ∀ V : OpenBelow K X U,
+    X.structurePresheaf.Sections V.1 ≃ₐ[K]
+      Y.structurePresheaf.Sections (openEquiv V)
+  /-- The equivalences on sections commute with restriction. -/
+  sectionsEquiv_restriction : ∀ {V W : OpenBelow K X U} (hVW : V ≤ W),
+    (sectionsEquiv V).toAlgHom.comp
+        (X.structurePresheaf.restriction
+          (show (V.1 : Set X.points) ⊆ (W.1 : Set X.points) from fun _ hx ↦ hVW hx)) =
+      (Y.structurePresheaf.restriction ((openEquiv_le_iff V W).2 hVW)).comp
+        (sectionsEquiv W).toAlgHom
+
+end AdmissibleLocallyRingedSpace
+
+/-- A fully bundled affinoid-spectrum model. Its admissible topology and structure sheaf are part
+of the model; they are not reconstructed from an equivalence of point sets and global sections. -/
+structure AffinoidSpectrumModel where
+  /-- The coordinate algebra. -/
   A : Type u
   [commRing : CommRing A]
   [algebra : Algebra K A]
   /-- The coordinate algebra is strictly affinoid over `K`. -/
   isAffinoid : IsAffinoidAlgebra K A
-  /-- The chart points are the maximal ideals of its coordinate algebra. -/
-  pointsEquiv : ↥(domain : Set X.points) ≃ MaximalSpectrum A
-  /-- Analytic functions on the chart recover its coordinate algebra. -/
-  sectionsEquiv : X.structurePresheaf.Sections domain ≃ₐ[K] A
+  /-- The complete admissible locally ringed space underlying the affinoid spectrum. -/
+  toAdmissibleLocallyRingedSpace : AdmissibleLocallyRingedSpace K
+  /-- The analytic points are the maximal ideals of the coordinate algebra. -/
+  pointsEquiv : toAdmissibleLocallyRingedSpace.points ≃ MaximalSpectrum A
+  /-- Global analytic functions recover the coordinate algebra. -/
+  sectionsEquiv :
+    toAdmissibleLocallyRingedSpace.structurePresheaf.Sections
+        (AdmissibleTopology.Open.top toAdmissibleLocallyRingedSpace.admissibleTopology) ≃ₐ[K] A
 
-attribute [instance] AffinoidChart.commRing AffinoidChart.algebra
+attribute [instance] AffinoidSpectrumModel.commRing AffinoidSpectrumModel.algebra
+
+/-- An affinoid chart around a point of an admissible locally ringed space. The restriction to the
+chart domain is identified with a fully bundled affinoid-spectrum model, including its admissible
+site and structure sheaf. -/
+structure AffinoidChart (X : AdmissibleLocallyRingedSpace K) (x : X.points) where
+  /-- The admissible neighborhood underlying the chart. -/
+  domain : X.admissibleTopology.Open
+  /-- The center belongs to the chart. -/
+  mem : x ∈ (domain : Set X.points)
+  /-- The affinoid-spectrum model for the chart. -/
+  model : AffinoidSpectrumModel K
+  /-- Identification of the restricted locally ringed space with the full affinoid model. -/
+  restrictionIso :
+    AdmissibleLocallyRingedSpace.RestrictionIso K X model.toAdmissibleLocallyRingedSpace domain
 
 /-- A rigid analytic space over `K` is an admissible locally ringed space admitting an affinoid
 chart modeled on `MaximalSpectrum A` around every point. -/

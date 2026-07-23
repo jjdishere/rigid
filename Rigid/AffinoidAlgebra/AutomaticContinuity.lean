@@ -131,39 +131,80 @@ private theorem isNoetherianRing_of_isAffinoidAlgebra
   exact isNoetherianRing_of_ringEquiv _ P.equiv.toRingEquiv
 
 @[reducible]
-private noncomputable def compatibleResidueNormedAddCommGroup
-    (P : AffinoidPresentation K A) : NormedAddCommGroup A := by
+noncomputable def AffinoidPresentation.residueNormedCommRing
+    (P : AffinoidPresentation K A) : NormedCommRing A := by
   letI : IsClosed (P.ideal : Set (TateAlgebra K (Fin P.n))) :=
     tateAlgebra_ideal_isClosed K P.ideal
   letI : NormedCommRing (TateAlgebra K (Fin P.n) ⧸ P.ideal) := inferInstance
-  letI : NormedCommRing A := NormedCommRing.induced A
+  exact NormedCommRing.induced A
     (TateAlgebra K (Fin P.n) ⧸ P.ideal) P.equiv.symm.toRingHom P.equiv.symm.injective
-  infer_instance
 
 @[reducible]
-private noncomputable def compatibleResidueNormedSpace (P : AffinoidPresentation K A) :
-    letI : NormedAddCommGroup A := compatibleResidueNormedAddCommGroup K A P
-    NormedSpace K A := by
+noncomputable def AffinoidPresentation.residueNormedAlgebra (P : AffinoidPresentation K A) :
+    letI : NormedCommRing A := P.residueNormedCommRing K A
+    NormedAlgebra K A := by
   letI : IsClosed (P.ideal : Set (TateAlgebra K (Fin P.n))) :=
     tateAlgebra_ideal_isClosed K P.ideal
   letI : NormedCommRing (TateAlgebra K (Fin P.n) ⧸ P.ideal) := inferInstance
-  letI : NormedAddCommGroup A := compatibleResidueNormedAddCommGroup K A P
-  exact NormedSpace.induced K A (TateAlgebra K (Fin P.n) ⧸ P.ideal)
-    P.equiv.symm.toLinearEquiv
+  letI : NormedCommRing A := P.residueNormedCommRing K A
+  exact NormedAlgebra.induced K A (TateAlgebra K (Fin P.n) ⧸ P.ideal)
+    P.equiv.symm.toAlgHom
 
-private theorem compatibleResidueCompleteSpace (P : AffinoidPresentation K A) :
-    letI : NormedAddCommGroup A := compatibleResidueNormedAddCommGroup K A P
+@[simp]
+theorem AffinoidPresentation.residueNormedAlgebra_algebraMap
+    (P : AffinoidPresentation K A) (r : K) :
+    letI : NormedCommRing A := P.residueNormedCommRing K A
+    letI : NormedAlgebra K A := P.residueNormedAlgebra K A
+    algebraMap K A r =
+      AffinoidPresentation.toAlgHom K A P (algebraMap K (TateAlgebra K (Fin P.n)) r) := by
+  exact (AffinoidPresentation.toAlgHom K A P).commutes r |>.symm
+
+private theorem idealQuotient_isUltrametricDist
+    {R : Type*} [NormedCommRing R] [IsUltrametricDist R]
+    (I : Ideal R) [IsClosed (I : Set R)] : IsUltrametricDist (R ⧸ I) := by
+  apply IsUltrametricDist.isUltrametricDist_of_forall_norm_add_le_max_norm
+  intro x y
+  apply le_of_forall_pos_le_add
+  intro ε hε
+  obtain ⟨a, ha, hna⟩ := Ideal.Quotient.norm_mk_lt x (half_pos hε)
+  obtain ⟨b, hb, hnb⟩ := Ideal.Quotient.norm_mk_lt y (half_pos hε)
+  refine (calc
+    ‖x + y‖ = ‖Ideal.Quotient.mk I (a + b)‖ := by rw [map_add, ha, hb]
+    _ ≤ ‖a + b‖ := Ideal.Quotient.norm_mk_le I (a + b)
+    _ ≤ max ‖a‖ ‖b‖ := IsUltrametricDist.norm_add_le_max a b
+    _ < max (‖x‖ + ε / 2) (‖y‖ + ε / 2) := max_lt_max hna hnb
+    _ = max ‖x‖ ‖y‖ + ε / 2 := by rw [max_add_add_right]
+    _ ≤ max ‖x‖ ‖y‖ + ε := by linarith).le
+
+theorem AffinoidPresentation.residueCompleteSpace (P : AffinoidPresentation K A) :
+    letI : NormedCommRing A := P.residueNormedCommRing K A
     CompleteSpace A := by
   letI : IsClosed (P.ideal : Set (TateAlgebra K (Fin P.n))) :=
     tateAlgebra_ideal_isClosed K P.ideal
   letI : NormedCommRing (TateAlgebra K (Fin P.n) ⧸ P.ideal) := inferInstance
-  letI : NormedAddCommGroup A := compatibleResidueNormedAddCommGroup K A P
+  letI : NormedCommRing A := P.residueNormedCommRing K A
   let e : A ≃ₗᵢ[K] (TateAlgebra K (Fin P.n) ⧸ P.ideal) :=
     { P.equiv.symm.toLinearEquiv with norm_map' := fun _ ↦ rfl }
   exact (completeSpace_congr (e := e.toEquiv) e.isometry.isUniformEmbedding).2 inferInstance
 
-private theorem compatibleResidueTopology_eq (P : AffinoidPresentation K A) :
-    (letI : NormedAddCommGroup A := compatibleResidueNormedAddCommGroup K A P
+theorem AffinoidPresentation.residueIsUltrametricDist (P : AffinoidPresentation K A) :
+    letI : NormedCommRing A := P.residueNormedCommRing K A
+    IsUltrametricDist A := by
+  letI : IsClosed (P.ideal : Set (TateAlgebra K (Fin P.n))) :=
+    tateAlgebra_ideal_isClosed K P.ideal
+  letI : NormedCommRing (TateAlgebra K (Fin P.n) ⧸ P.ideal) := inferInstance
+  letI : IsUltrametricDist (TateAlgebra K (Fin P.n) ⧸ P.ideal) :=
+    idealQuotient_isUltrametricDist P.ideal
+  letI : NormedCommRing A := P.residueNormedCommRing K A
+  apply IsUltrametricDist.isUltrametricDist_of_forall_norm_add_le_max_norm
+  intro x y
+  change ‖P.equiv.symm (x + y)‖ ≤ max ‖P.equiv.symm x‖ ‖P.equiv.symm y‖
+  rw [map_add]
+  exact IsUltrametricDist.norm_add_le_max _ _
+
+theorem AffinoidPresentation.residueNormedCommRing_topology_eq
+    (P : AffinoidPresentation K A) :
+    (letI : NormedCommRing A := P.residueNormedCommRing K A
      inferInstance : TopologicalSpace A) = P.residueTopology := by
   letI : IsClosed (P.ideal : Set (TateAlgebra K (Fin P.n))) :=
     tateAlgebra_ideal_isClosed K P.ideal
@@ -182,10 +223,31 @@ private theorem compatibleResidueTopology_eq (P : AffinoidPresentation K A) :
       rw [coinduced_compose]
       rfl
 
+/-- The presentation map is norm-nonincreasing for the transported quotient norm. -/
+theorem AffinoidPresentation.norm_toAlgHom_le (P : AffinoidPresentation K A)
+    (x : TateAlgebra K (Fin P.n)) :
+    letI : NormedCommRing A := P.residueNormedCommRing K A
+    ‖AffinoidPresentation.toAlgHom K A P x‖ ≤ ‖x‖ := by
+  change ‖P.equiv.symm (P.equiv (Ideal.Quotient.mk P.ideal x))‖ ≤ ‖x‖
+  rw [P.equiv.symm_apply_apply]
+  exact Ideal.Quotient.norm_mk_le P.ideal x
+
+/-- The quotient presentation map as a continuous algebra homomorphism. -/
+noncomputable def AffinoidPresentation.toContinuousAlgHom (P : AffinoidPresentation K A) :
+    letI : NormedCommRing A := P.residueNormedCommRing K A
+    letI : NormedAlgebra K A := P.residueNormedAlgebra K A
+    ContinuousAlgHom K (TateAlgebra K (Fin P.n)) A := by
+  letI : NormedCommRing A := P.residueNormedCommRing K A
+  letI : NormedAlgebra K A := P.residueNormedAlgebra K A
+  exact
+    { toAlgHom := P.toAlgHom
+      cont := AddMonoidHomClass.continuous_of_bound P.toAlgHom 1 fun x ↦ by
+        simpa using P.norm_toAlgHom_le K A x }
+
 private theorem residueT2Space (P : AffinoidPresentation K A) :
     @T2Space A P.residueTopology := by
-  rw [← compatibleResidueTopology_eq K A P]
-  letI : NormedAddCommGroup A := compatibleResidueNormedAddCommGroup K A P
+  rw [← P.residueNormedCommRing_topology_eq K A]
+  letI : NormedCommRing A := P.residueNormedCommRing K A
   infer_instance
 
 private theorem continuous_for_residueTopology_of_finite_codomain
@@ -199,10 +261,10 @@ private theorem continuous_for_residueTopology_of_finite_codomain
   let PC : AffinoidPresentation K C := pushForwardPresentation K PA q hq
   have hqcont : @Continuous A C PA.residueTopology PC.residueTopology q :=
     continuous_for_residueTopology_of_surjective K PA q hq
-  letI : NormedAddCommGroup C := compatibleResidueNormedAddCommGroup K C PC
-  letI : NormedSpace K C := compatibleResidueNormedSpace K C PC
-  letI : NormedAddCommGroup B := compatibleResidueNormedAddCommGroup K B PB
-  letI : NormedSpace K B := compatibleResidueNormedSpace K B PB
+  letI : NormedCommRing C := PC.residueNormedCommRing K C
+  letI : NormedAlgebra K C := PC.residueNormedAlgebra K C
+  letI : NormedCommRing B := PB.residueNormedCommRing K B
+  letI : NormedAlgebra K B := PB.residueNormedAlgebra K B
   letI : TopologicalSpace C := PC.residueTopology
   letI : IsTopologicalRing C := PC.residueIsTopologicalRing
   letI : ContinuousSMul K C := PC.residueContinuousSMul
@@ -291,16 +353,16 @@ private theorem continuous_for_residueTopology
     (PA : AffinoidPresentation K A) (PB : AffinoidPresentation K B) (f : A →ₐ[K] B) :
     @Continuous A B PA.residueTopology PB.residueTopology f := by
   let fLinear : A →ₗ[K] B := f.toLinearMap
-  letI : NormedAddCommGroup A := compatibleResidueNormedAddCommGroup K A PA
-  letI : NormedSpace K A := compatibleResidueNormedSpace K A PA
-  letI : CompleteSpace A := compatibleResidueCompleteSpace K A PA
-  letI : NormedAddCommGroup B := compatibleResidueNormedAddCommGroup K B PB
-  letI : NormedSpace K B := compatibleResidueNormedSpace K B PB
-  letI : CompleteSpace B := compatibleResidueCompleteSpace K B PB
+  letI : NormedCommRing A := PA.residueNormedCommRing K A
+  letI : NormedAlgebra K A := PA.residueNormedAlgebra K A
+  letI : CompleteSpace A := PA.residueCompleteSpace K A
+  letI : NormedCommRing B := PB.residueNormedCommRing K B
+  letI : NormedAlgebra K B := PB.residueNormedAlgebra K B
+  letI : CompleteSpace B := PB.residueCompleteSpace K B
   have hAtop : (inferInstance : TopologicalSpace A) = PA.residueTopology :=
-    compatibleResidueTopology_eq K A PA
+    PA.residueNormedCommRing_topology_eq K A
   have hBtop : (inferInstance : TopologicalSpace B) = PB.residueTopology :=
-    compatibleResidueTopology_eq K B PB
+    PB.residueNormedCommRing_topology_eq K B
   have hfmetric := continuous_linearMap_of_seq_closed_graph K fLinear (by
     intro u x y hu hfu
     suffices y - f x = 0 by simpa [fLinear] using (sub_eq_zero.mp this)
@@ -350,6 +412,52 @@ theorem continuous_for_affinoidPresentationData
   let PB : AffinoidPresentation K B := { n := nB, ideal := IB, equiv := eB }
   change @Continuous A B PA.residueTopology PB.residueTopology f
   exact continuous_for_residueTopology K PA PB f
+
+/-- Every algebra homomorphism between two chosen affinoid presentations is continuous for their
+transported quotient norms. -/
+noncomputable def AffinoidPresentation.continuousAlgHomOfAlgHom
+    {A : Type v} [CommRing A] [Algebra K A]
+    {B : Type w} [CommRing B] [Algebra K B]
+    (PA : AffinoidPresentation K A) (PB : AffinoidPresentation K B) (f : A →ₐ[K] B) :
+    letI : NormedCommRing A := PA.residueNormedCommRing K A
+    letI : NormedAlgebra K A := PA.residueNormedAlgebra K A
+    letI : NormedCommRing B := PB.residueNormedCommRing K B
+    letI : NormedAlgebra K B := PB.residueNormedAlgebra K B
+    ContinuousAlgHom K A B := by
+  letI : NormedCommRing A := PA.residueNormedCommRing K A
+  letI : NormedAlgebra K A := PA.residueNormedAlgebra K A
+  letI : NormedCommRing B := PB.residueNormedCommRing K B
+  letI : NormedAlgebra K B := PB.residueNormedAlgebra K B
+  refine { toAlgHom := f, cont := ?_ }
+  have hf := continuous_for_affinoidPresentationData K PA.ideal PA.equiv PB.ideal PB.equiv f
+  change @Continuous A B PA.residueTopology PB.residueTopology f at hf
+  rw [← PA.residueNormedCommRing_topology_eq K A,
+    ← PB.residueNormedCommRing_topology_eq K B] at hf
+  exact hf
+
+/-- Composing a presentation map with an algebra homomorphism into an affinoid algebra gives a
+continuous map from the native Tate norm to the target's transported quotient norm. -/
+noncomputable def AffinoidPresentation.continuousFromTate
+    {A : Type v} [CommRing A] [Algebra K A]
+    {B : Type w} [CommRing B] [Algebra K B]
+    (PA : AffinoidPresentation K A) (PB : AffinoidPresentation K B) (f : A →ₐ[K] B) :
+    letI : NormedCommRing B := PB.residueNormedCommRing K B
+    letI : NormedAlgebra K B := PB.residueNormedAlgebra K B
+    ContinuousAlgHom K (TateAlgebra K (Fin PA.n)) B := by
+  letI : NormedCommRing B := PB.residueNormedCommRing K B
+  letI : NormedAlgebra K B := PB.residueNormedAlgebra K B
+  refine { toAlgHom := f.comp PA.toAlgHom, cont := ?_ }
+  letI : TopologicalSpace A := PA.residueTopology
+  have hf := continuous_for_affinoidPresentationData K PA.ideal PA.equiv PB.ideal PB.equiv f
+  change @Continuous A B PA.residueTopology PB.residueTopology f at hf
+  have hPA : @Continuous (TateAlgebra K (Fin PA.n)) A inferInstance PA.residueTopology
+      PA.toAlgHom := continuous_coinduced_rng
+  have hcomp : @Continuous (TateAlgebra K (Fin PA.n)) B inferInstance PB.residueTopology
+      (f.comp PA.toAlgHom) := by
+    letI : TopologicalSpace B := PB.residueTopology
+    exact hf.comp hPA
+  rw [← PB.residueNormedCommRing_topology_eq K B] at hcomp
+  exact hcomp
 
 end
 
