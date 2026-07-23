@@ -2382,7 +2382,48 @@ noncomputable def spectrumComap {A : Type v} {B : Type w}
      BerkovichSpectrumOver K B) →
       (letI : NormedCommRing A := hA.presentation.residueNormedCommRing K A
        letI : NormedAlgebra K A := hA.presentation.residueNormedAlgebra K A
-       BerkovichSpectrumOver K A) := sorry
+       BerkovichSpectrumOver K A) := by
+  letI : NormedCommRing A := hA.presentation.residueNormedCommRing K A
+  letI : NormedAlgebra K A := hA.presentation.residueNormedAlgebra K A
+  letI : CompleteSpace A := hA.presentation.residueCompleteSpace K A
+  letI : IsUltrametricDist A := hA.presentation.residueIsUltrametricDist K A
+  letI : NormedCommRing B := hB.presentation.residueNormedCommRing K B
+  letI : NormedAlgebra K B := hB.presentation.residueNormedAlgebra K B
+  letI : CompleteSpace B := hB.presentation.residueCompleteSpace K B
+  letI : IsUltrametricDist B := hB.presentation.residueIsUltrametricDist K B
+  let φ : ContinuousAlgHom K A B :=
+    { __ := f
+      cont := continuous_of_isAffinoidAlgebra K hA hB f }
+  intro x
+  refine
+    { toBerkovichSpectrum := ?_
+      map_algebraMap' := ?_ }
+  · refine
+      { seminorm :=
+          { toFun := fun a ↦ x (φ a)
+            map_zero' := by simp
+            add_le' := by
+              intro a b
+              simpa only [map_add] using
+                BerkovichSpectrum.map_add_le B x.toBerkovichSpectrum (φ a) (φ b)
+            neg' := by simp
+            map_one' := by simp
+            map_mul' := by simp }
+        le_norm' := ?_ }
+    intro a
+    apply contraction_of_isPowMul_of_boundedWrt (SeminormedRing.toRingSeminorm A)
+      (nβ := fun b : B ↦ x b)
+    · intro b n hn
+      exact map_pow x.toBerkovichSpectrum.seminorm b n
+    · obtain ⟨M, hM, hφ⟩ := SemilinearMapClass.bound_of_continuous φ φ.continuous
+      exact ⟨M, hM, fun a ↦
+        (BerkovichSpectrum.le_norm B x.toBerkovichSpectrum (φ a)).trans (hφ a)⟩
+  · intro r
+    change x (φ (algebraMap K A r)) = ‖r‖
+    calc
+      x (φ (algebraMap K A r)) = x (algebraMap K B r) :=
+        congrArg (fun b : B ↦ x b) (φ.commutes r)
+      _ = ‖r‖ := BerkovichSpectrumOver.map_algebraMap (K := K) (A := B) x r
 
 /-- Pullback on affinoid Berkovich spectra is pointwise precomposition with the algebra map. -/
 @[simp]
@@ -2396,13 +2437,31 @@ theorem spectrumComap_apply {A : Type v} {B : Type w}
     letI : NormedAlgebra K A := hA.presentation.residueNormedAlgebra K A
     letI : NormedCommRing B := hB.presentation.residueNormedCommRing K B
     letI : NormedAlgebra K B := hB.presentation.residueNormedAlgebra K B
-    spectrumComap K hA hB f x a = x (f a) := sorry
+    spectrumComap K hA hB f x a = x (f a) := by
+  letI : NormedCommRing A := hA.presentation.residueNormedCommRing K A
+  letI : NormedAlgebra K A := hA.presentation.residueNormedAlgebra K A
+  letI : CompleteSpace A := hA.presentation.residueCompleteSpace K A
+  letI : IsUltrametricDist A := hA.presentation.residueIsUltrametricDist K A
+  letI : NormedCommRing B := hB.presentation.residueNormedCommRing K B
+  letI : NormedAlgebra K B := hB.presentation.residueNormedAlgebra K B
+  letI : CompleteSpace B := hB.presentation.residueCompleteSpace K B
+  letI : IsUltrametricDist B := hB.presentation.residueIsUltrametricDist K B
+  rfl
 
 @[simp]
 theorem spectrumComap_id {A : Type v} [CommRing A] [Algebra K A]
     (hA : IsAffinoidAlgebra K A) :
     letI : NormedCommRing A := hA.presentation.residueNormedCommRing K A
-    spectrumComap K hA hA (AlgHom.id K A) = id := sorry
+    spectrumComap K hA hA (AlgHom.id K A) = id := by
+  letI : NormedCommRing A := hA.presentation.residueNormedCommRing K A
+  letI : NormedAlgebra K A := hA.presentation.residueNormedAlgebra K A
+  letI : CompleteSpace A := hA.presentation.residueCompleteSpace K A
+  letI : IsUltrametricDist A := hA.presentation.residueIsUltrametricDist K A
+  funext x
+  apply BerkovichSpectrumOver.ext K A
+  intro a
+  rw [spectrumComap_apply]
+  rfl
 
 @[simp]
 theorem spectrumComap_comp {A : Type v} {B : Type w} {C : Type z}
@@ -2413,7 +2472,25 @@ theorem spectrumComap_comp {A : Type v} {B : Type w} {C : Type z}
     letI : NormedCommRing B := hB.presentation.residueNormedCommRing K B
     letI : NormedCommRing C := hC.presentation.residueNormedCommRing K C
     spectrumComap K hA hC (g.comp f) =
-      spectrumComap K hA hB f ∘ spectrumComap K hB hC g := sorry
+      spectrumComap K hA hB f ∘ spectrumComap K hB hC g := by
+  letI : NormedCommRing A := hA.presentation.residueNormedCommRing K A
+  letI : NormedAlgebra K A := hA.presentation.residueNormedAlgebra K A
+  letI : NormedCommRing B := hB.presentation.residueNormedCommRing K B
+  letI : NormedAlgebra K B := hB.presentation.residueNormedAlgebra K B
+  letI : NormedCommRing C := hC.presentation.residueNormedCommRing K C
+  letI : NormedAlgebra K C := hC.presentation.residueNormedAlgebra K C
+  letI : CompleteSpace A := hA.presentation.residueCompleteSpace K A
+  letI : IsUltrametricDist A := hA.presentation.residueIsUltrametricDist K A
+  letI : CompleteSpace B := hB.presentation.residueCompleteSpace K B
+  letI : IsUltrametricDist B := hB.presentation.residueIsUltrametricDist K B
+  letI : CompleteSpace C := hC.presentation.residueCompleteSpace K C
+  letI : IsUltrametricDist C := hC.presentation.residueIsUltrametricDist K C
+  funext x
+  apply BerkovichSpectrumOver.ext K A
+  intro a
+  change x ((g.comp f) a) = spectrumComap K hA hB f (spectrumComap K hB hC g x) a
+  rw [spectrumComap_apply, spectrumComap_apply]
+  rfl
 
 /-- Pullback on affinoid Berkovich spectra is continuous. -/
 theorem continuous_spectrumComap {A : Type v} {B : Type w}
@@ -2423,7 +2500,18 @@ theorem continuous_spectrumComap {A : Type v} {B : Type w}
     letI : NormedCommRing B := hB.presentation.residueNormedCommRing K B
     letI : NormedAlgebra K A := hA.presentation.residueNormedAlgebra K A
     letI : NormedAlgebra K B := hB.presentation.residueNormedAlgebra K B
-    Continuous (spectrumComap K hA hB f) := sorry
+    Continuous (spectrumComap K hA hB f) := by
+  letI : NormedCommRing A := hA.presentation.residueNormedCommRing K A
+  letI : NormedAlgebra K A := hA.presentation.residueNormedAlgebra K A
+  letI : CompleteSpace A := hA.presentation.residueCompleteSpace K A
+  letI : IsUltrametricDist A := hA.presentation.residueIsUltrametricDist K A
+  letI : NormedCommRing B := hB.presentation.residueNormedCommRing K B
+  letI : NormedAlgebra K B := hB.presentation.residueNormedAlgebra K B
+  letI : CompleteSpace B := hB.presentation.residueCompleteSpace K B
+  letI : IsUltrametricDist B := hB.presentation.residueIsUltrametricDist K B
+  refine (BerkovichSpectrumOver.continuous_iff_eval K A).2 ?_
+  intro a
+  simpa [spectrumComap_apply] using (BerkovichSpectrumOver.continuous_eval K B (f a))
 
 /-- The morphism of affinoid Berkovich spaces induced contravariantly by an algebra homomorphism. -/
 noncomputable def ofAffinoidMap {A : Type v} {B : Type w}
