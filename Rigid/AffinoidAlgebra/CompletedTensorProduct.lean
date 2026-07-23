@@ -41,6 +41,28 @@ theorem isPowerBounded_map_continuousAlgHom
 
 namespace AffinoidPresentation
 
+/-- The tautological presentation of a Tate algebra as the quotient by the zero ideal. -/
+noncomputable def tateAlgebraPresentation (n : ℕ) :
+    AffinoidPresentation K (TateAlgebra K (Fin n)) where
+  n := n
+  ideal := ⊥
+  equiv := (AlgEquiv.ofBijective (Ideal.Quotient.mkₐ K ⊥) ⟨by
+    intro x y hxy
+    apply sub_eq_zero.mp
+    have hmem : x - y ∈ (⊥ : Ideal (TateAlgebra K (Fin n))) := by
+      apply (Ideal.Quotient.eq_zero_iff_mem
+        (I := (⊥ : Ideal (TateAlgebra K (Fin n)))) (a := x - y)).mp
+      change Ideal.Quotient.mk (⊥ : Ideal (TateAlgebra K (Fin n))) x =
+        Ideal.Quotient.mk (⊥ : Ideal (TateAlgebra K (Fin n))) y at hxy
+      rw [map_sub, hxy, sub_self]
+    exact hmem,
+    Ideal.Quotient.mkₐ_surjective K ⊥⟩).symm
+
+/-- A Tate algebra in finitely many variables is affinoid. -/
+theorem tateAlgebra_isAffinoid (n : ℕ) :
+    IsAffinoidAlgebra K (TateAlgebra K (Fin n)) :=
+  ⟨tateAlgebraPresentation K n⟩
+
 /-- The continuous coordinate-block map from the left presentation. -/
 noncomputable def leftBlockContinuousMap (P : AffinoidPresentation K A)
     (Q : AffinoidPresentation K B) :

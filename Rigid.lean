@@ -6,6 +6,7 @@ import Rigid.AffinoidAlgebra.NoetherNormalization
 import Rigid.AffinoidAlgebra.QuotientNorm
 import Rigid.AffinoidAlgebra.QuotientTopology
 import Rigid.AffinoidAlgebra.RationalDatum
+import Rigid.AffinoidAlgebra.RationalLocalization
 import Rigid.Berkovich.AffinoidDomain
 import Rigid.Berkovich.CompletedResidue
 import Rigid.Berkovich.GeneralSmoothing
