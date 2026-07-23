@@ -1,4 +1,5 @@
 import Rigid.AffinoidAlgebra.MaximalSpectrum
+import Rigid.AffinoidAlgebra.RationalLocalization
 import Rigid.RigidSpace.StructureSheaf
 
 set_option linter.style.header false
@@ -110,8 +111,8 @@ structure AffinoidSpectrumModel where
   A : Type u
   [commRing : CommRing A]
   [algebra : Algebra K A]
-  /-- The coordinate algebra is strictly affinoid over `K`. -/
-  isAffinoid : IsAffinoidAlgebra K A
+  /-- A chosen strict-affinoid presentation of the coordinate algebra. -/
+  presentation : AffinoidPresentation K A
   /-- The complete admissible locally ringed space underlying the affinoid spectrum. -/
   toAdmissibleLocallyRingedSpace : AdmissibleLocallyRingedSpace K
   /-- The analytic points are the maximal ideals of the coordinate algebra. -/
@@ -123,6 +124,73 @@ structure AffinoidSpectrumModel where
 
 attribute [instance] AffinoidSpectrumModel.commRing AffinoidSpectrumModel.algebra
 
+namespace AffinoidSpectrumModel
+
+/-- The affinoid predicate induced by the chosen presentation of a spectrum model. -/
+theorem isAffinoid (M : AffinoidSpectrumModel K) : IsAffinoidAlgebra K M.A :=
+  ⟨M.presentation⟩
+
+/-- A rational domain in an affinoid spectrum model.
+
+The section and point equivalences are part of the datum, and the two compatibility equations tie
+them to restriction along the domain inclusion and to the maximal-spectrum pullback of the
+rational-localization map. This is the canonical-spectrum interface used by gluing. -/
+structure RationalDomain (M : AffinoidSpectrumModel K) where
+  /-- Number of rational coordinates. -/
+  n : ℕ
+  /-- The denominator of the rational datum. -/
+  g : M.A
+  /-- The numerators of the rational datum. -/
+  f : Fin n → M.A
+  /-- The datum defines a rational subdomain. -/
+  isRational : IsRationalDatum g f
+  /-- The corresponding admissible open of the spectrum model. -/
+  domain : M.toAdmissibleLocallyRingedSpace.admissibleTopology.Open
+  /-- Sections on the rational domain are its rational localization. -/
+  sectionsEquiv :
+    M.toAdmissibleLocallyRingedSpace.structurePresheaf.Sections domain ≃ₐ[K]
+      AffinoidPresentation.rationalLocalization K M.presentation g f
+  /-- The section equivalence is restriction of global functions followed by localization. -/
+  sections_restriction :
+    (sectionsEquiv.toAlgHom).comp
+        (M.toAdmissibleLocallyRingedSpace.structurePresheaf.restriction
+          (show domain ≤ AdmissibleTopology.Open.top
+            M.toAdmissibleLocallyRingedSpace.admissibleTopology from
+              (Set.subset_univ (domain : Set M.toAdmissibleLocallyRingedSpace.points)))) =
+      (AffinoidPresentation.rationalLocalizationMap K M.presentation g f).comp
+        M.sectionsEquiv.toAlgHom
+  /-- Points on the rational domain are the maximal ideals of its localization. -/
+  pointsEquiv :
+    ↥(domain : Set M.toAdmissibleLocallyRingedSpace.points) ≃
+      MaximalSpectrum (AffinoidPresentation.rationalLocalization K M.presentation g f)
+  /-- The point equivalence agrees with the inclusion induced by the localization map. -/
+  points_restriction :
+    ∀ x : ↥(domain : Set M.toAdmissibleLocallyRingedSpace.points),
+      M.pointsEquiv x.1 =
+        maximalSpectrumComap K M.isAffinoid
+          (AffinoidPresentation.rationalLocalization_isAffinoid K M.presentation g f)
+          (AffinoidPresentation.rationalLocalizationMap K M.presentation g f)
+          (pointsEquiv x)
+
+end AffinoidSpectrumModel
+
+/-- A rational basis for a canonical affinoid spectrum model. Every admissible open is covered by
+rational domains contained in it. -/
+structure AffinoidSpectrumRationalBasis (M : AffinoidSpectrumModel K) where
+  /-- An indexing type for the rational domains in the basis. -/
+  index : Type (u + 1)
+  /-- The rational domain represented by each basis index. -/
+  domain : index → M.RationalDomain
+  /-- Rational domains refine every admissible open by an admissible cover. -/
+  isCover : ∀ U : M.toAdmissibleLocallyRingedSpace.admissibleTopology.Open,
+    AdmissibleTopology.Open.IsCover
+      M.toAdmissibleLocallyRingedSpace.admissibleTopology
+      (fun i : {i : index // (domain i).domain ≤ U} ↦ (domain i.1).domain) U
+
+/-- A canonical affinoid spectrum consists of a fully bundled model and its rational basis. -/
+structure CanonicalAffinoidSpectrumModel extends AffinoidSpectrumModel K where
+  rationalBasis : AffinoidSpectrumRationalBasis K toAffinoidSpectrumModel
+
 /-- An affinoid chart around a point of an admissible locally ringed space. The restriction to the
 chart domain is identified with a fully bundled affinoid-spectrum model, including its admissible
 site and structure sheaf. -/
@@ -132,7 +200,7 @@ structure AffinoidChart (X : AdmissibleLocallyRingedSpace K) (x : X.points) wher
   /-- The center belongs to the chart. -/
   mem : x ∈ (domain : Set X.points)
   /-- The affinoid-spectrum model for the chart. -/
-  model : AffinoidSpectrumModel K
+  model : CanonicalAffinoidSpectrumModel K
   /-- Identification of the restricted locally ringed space with the full affinoid model. -/
   restrictionIso :
     AdmissibleLocallyRingedSpace.RestrictionIso K X model.toAdmissibleLocallyRingedSpace domain

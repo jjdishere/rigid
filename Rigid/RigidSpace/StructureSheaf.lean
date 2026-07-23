@@ -130,6 +130,39 @@ structure IsStructureSheaf (P : AdmissiblePresheaf K T) : Prop where
   isSheaf : P.IsSheaf
   isLocallyRinged : P.IsLocallyRinged
 
+/-- Local sections together with the compatibility condition required for effective descent. -/
+structure GluingData (P : AdmissiblePresheaf K T)
+    {I : Type (u + 1)} (U : I → T.Open) (V : T.Open) where
+  /-- The section on each member of the cover. -/
+  localSection : ∀ i, P.Sections (U i)
+  /-- The local sections agree on every pairwise intersection. -/
+  compatible : P.IsCompatible U localSection
+
+/-- The section obtained by effective descent from compatible local sections. -/
+noncomputable def glue (P : AdmissiblePresheaf K T) (hP : P.IsStructureSheaf)
+  {I : Type (u + 1)} {U : I → T.Open} {V : T.Open}
+    (hU : AdmissibleTopology.Open.IsCover T U V)
+    (s : GluingData P U V) : P.Sections V :=
+  Classical.choose (hP.isSheaf hU s.localSection s.compatible)
+
+/-- Restricting the glued section recovers each member of the gluing datum. -/
+theorem glue_restriction (P : AdmissiblePresheaf K T) (hP : P.IsStructureSheaf)
+    {I : Type (u + 1)} {U : I → T.Open} {V : T.Open}
+  (hU : AdmissibleTopology.Open.IsCover T U V)
+    (s : GluingData P U V) (i : I) :
+    P.restriction (AdmissibleTopology.Open.IsCover.subset hU i)
+        (glue P hP hU s) = s.localSection i :=
+  (Classical.choose_spec (hP.isSheaf hU s.localSection s.compatible)).1 i
+
+/-- The glued section is unique among sections with the prescribed restrictions. -/
+theorem glue_unique (P : AdmissiblePresheaf K T) (hP : P.IsStructureSheaf)
+    {I : Type (u + 1)} {U : I → T.Open} {V : T.Open}
+    (hU : AdmissibleTopology.Open.IsCover T U V)
+    (s : GluingData P U V) {t : P.Sections V}
+    (ht : ∀ i, P.restriction (AdmissibleTopology.Open.IsCover.subset hU i) t = s.localSection i) :
+    t = glue P hP hU s := by
+  exact (Classical.choose_spec (hP.isSheaf hU s.localSection s.compatible)).2 t ht
+
 end AdmissiblePresheaf
 
 end Rigid
