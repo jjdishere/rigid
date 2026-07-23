@@ -92,6 +92,27 @@ theorem rationalLocalization_relation (P : AffinoidPresentation K A)
   apply Ideal.subset_span
   exact ⟨i, rfl⟩
 
+/-- Maps from a rational localization into an affinoid algebra are determined by the map on the
+base algebra and the images of the rational variables. -/
+theorem rationalLocalization_algHom_ext
+    {C : Type*} [CommRing C] [Algebra K C]
+    (P : AffinoidPresentation K A) {n : ℕ} (g : A) (f : Fin n → A)
+    (R : AffinoidPresentation K C) (φ ψ : rationalLocalization K P g f →ₐ[K] C)
+    (hbase : φ.comp (rationalLocalizationMap K P g f) =
+      ψ.comp (rationalLocalizationMap K P g f))
+    (hvar : ∀ i, φ (rationalLocalizationVariable K P g f i) =
+      ψ (rationalLocalizationVariable K P g f i)) :
+    φ = ψ := by
+  let T := tateAlgebraPresentation K n
+  let q := Ideal.Quotient.mkₐ K (rationalRelationIdeal K P g f)
+  apply (AlgHom.cancel_right (Ideal.Quotient.mkₐ_surjective K
+    (rationalRelationIdeal K P g f))).mp
+  apply completedTensorProduct_algHom_ext K P T R
+  · simpa [q, T, rationalLocalizationMap, AlgHom.comp_assoc] using hbase
+  · apply tateAlgebra_algHom_ext K n R
+    intro i
+    simpa [q, T, rationalLocalizationVariable, AlgHom.comp_apply] using hvar i
+
 /-- The bounded universal map out of a rational localization into a presented affinoid algebra. -/
 noncomputable def rationalLocalizationLift
     {C : Type*} [CommRing C] [Algebra K C]
@@ -197,6 +218,35 @@ theorem rationalLocalizationLift_variable
   rw [hright]
   simpa using Classical.choose_spec
     (existsUnique_continuousAlgHom_of_isPowerBounded (K := K) x hx).exists i
+
+/-- The rational localization represents bounded solutions of the equations `g Tᵢ = fᵢ` in
+affinoid target algebras. -/
+theorem existsUnique_algHom_from_rationalLocalization
+    {C : Type*} [CommRing C] [Algebra K C]
+    (P : AffinoidPresentation K A) {n : ℕ} (g : A) (f : Fin n → A)
+    (R : AffinoidPresentation K C) (h : A →ₐ[K] C) (x : Fin n → C)
+    (hx : letI : NormedCommRing C := R.residueNormedCommRing K C
+      ∀ i, IsPowerBounded (x i))
+    (hrel : ∀ i, h g * x i = h (f i)) :
+    letI : NormedCommRing C := R.residueNormedCommRing K C
+    letI : NormedAlgebra K C := R.residueNormedAlgebra K C
+    letI : CompleteSpace C := R.residueCompleteSpace K C
+    letI : IsUltrametricDist C := R.residueIsUltrametricDist K C
+    ∃! φ : rationalLocalization K P g f →ₐ[K] C,
+      φ.comp (rationalLocalizationMap K P g f) = h ∧
+        ∀ i, φ (rationalLocalizationVariable K P g f i) = x i := by
+  letI : NormedCommRing C := R.residueNormedCommRing K C
+  letI : NormedAlgebra K C := R.residueNormedAlgebra K C
+  letI : CompleteSpace C := R.residueCompleteSpace K C
+  letI : IsUltrametricDist C := R.residueIsUltrametricDist K C
+  refine ⟨rationalLocalizationLift K P g f R h x hx hrel,
+    ⟨rationalLocalizationLift_comp_map K P g f R h x hx hrel,
+      rationalLocalizationLift_variable K P g f R h x hx hrel⟩, ?_⟩
+  intro φ hφ
+  apply rationalLocalization_algHom_ext K P g f R
+  · rw [hφ.1, rationalLocalizationLift_comp_map K P g f R h x hx hrel]
+  · intro i
+    rw [hφ.2 i, rationalLocalizationLift_variable K P g f R h x hx hrel i]
 
 end AffinoidPresentation
 

@@ -1,5 +1,6 @@
 import Rigid.AffinoidAlgebra.AutomaticContinuity
 import Rigid.AffinoidAlgebra.Basic
+import Rigid.AffinoidAlgebra.Category
 import Rigid.AffinoidAlgebra.CompletedTensorProduct
 import Rigid.AffinoidAlgebra.MaximalSpectrum
 import Rigid.AffinoidAlgebra.NoetherNormalization

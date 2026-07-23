@@ -82,6 +82,25 @@ structure RestrictionIso (X Y : AdmissibleLocallyRingedSpace K)
       (Y.structurePresheaf.restriction ((openEquiv_le_iff V W).2 hVW)).comp
         (sectionsEquiv W).toAlgHom
 
+namespace RestrictionIso
+
+omit [CompleteSpace K] [IsUltrametricDist K] in
+/-- The full open of a restricted site corresponds to the full open of the model. -/
+theorem openEquiv_top {X Y : AdmissibleLocallyRingedSpace K}
+    {U : X.admissibleTopology.Open} (e : RestrictionIso K X Y U) :
+    e.openEquiv (OpenBelow.top K X U) =
+      AdmissibleTopology.Open.top Y.admissibleTopology := by
+  apply AdmissibleTopology.Open.ext
+  ext y
+  constructor
+  · intro
+    trivial
+  · intro
+    obtain ⟨x, rfl⟩ := e.pointsEquiv.surjective y
+    exact (e.mem_openEquiv x (OpenBelow.top K X U)).2 x.2
+
+end RestrictionIso
+
 end AdmissibleLocallyRingedSpace
 
 /-- A fully bundled affinoid-spectrum model. Its admissible topology and structure sheaf are part
@@ -117,6 +136,25 @@ structure AffinoidChart (X : AdmissibleLocallyRingedSpace K) (x : X.points) wher
   /-- Identification of the restricted locally ringed space with the full affinoid model. -/
   restrictionIso :
     AdmissibleLocallyRingedSpace.RestrictionIso K X model.toAdmissibleLocallyRingedSpace domain
+
+namespace AffinoidChart
+
+/-- The points of an affinoid chart are canonically the maximal ideals of its coordinate algebra. -/
+noncomputable def pointsEquiv {X : AdmissibleLocallyRingedSpace K} {x : X.points}
+    (c : AffinoidChart K X x) :
+    ↥(c.domain : Set X.points) ≃ MaximalSpectrum c.model.A :=
+  c.restrictionIso.pointsEquiv.trans c.model.pointsEquiv
+
+/-- Analytic functions on an affinoid chart recover its coordinate algebra. -/
+noncomputable def sectionsEquiv {X : AdmissibleLocallyRingedSpace K} {x : X.points}
+    (c : AffinoidChart K X x) :
+    X.structurePresheaf.Sections c.domain ≃ₐ[K] c.model.A := by
+  let e := c.restrictionIso.sectionsEquiv
+    (AdmissibleLocallyRingedSpace.OpenBelow.top K X c.domain)
+  rw [c.restrictionIso.openEquiv_top] at e
+  exact e.trans c.model.sectionsEquiv
+
+end AffinoidChart
 
 /-- A rigid analytic space over `K` is an admissible locally ringed space admitting an affinoid
 chart modeled on `MaximalSpectrum A` around every point. -/

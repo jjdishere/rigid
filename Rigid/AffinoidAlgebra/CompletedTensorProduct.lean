@@ -41,12 +41,11 @@ theorem isPowerBounded_map_continuousAlgHom
 
 namespace AffinoidPresentation
 
-/-- The tautological presentation of a Tate algebra as the quotient by the zero ideal. -/
-noncomputable def tateAlgebraPresentation (n : ℕ) :
-    AffinoidPresentation K (TateAlgebra K (Fin n)) where
-  n := n
-  ideal := ⊥
-  equiv := (AlgEquiv.ofBijective (Ideal.Quotient.mkₐ K ⊥) ⟨by
+omit [CompleteSpace K] in
+private theorem tateAlgebraQuotientMk_bijective (n : ℕ) :
+    Function.Bijective
+      (Ideal.Quotient.mkₐ K (⊥ : Ideal (TateAlgebra K (Fin n)))) :=
+  ⟨by
     intro x y hxy
     apply sub_eq_zero.mp
     have hmem : x - y ∈ (⊥ : Ideal (TateAlgebra K (Fin n))) := by
@@ -56,12 +55,68 @@ noncomputable def tateAlgebraPresentation (n : ℕ) :
         Ideal.Quotient.mk (⊥ : Ideal (TateAlgebra K (Fin n))) y at hxy
       rw [map_sub, hxy, sub_self]
     exact hmem,
-    Ideal.Quotient.mkₐ_surjective K ⊥⟩).symm
+    Ideal.Quotient.mkₐ_surjective K ⊥⟩
+
+private noncomputable def tateAlgebraQuotientEquiv (n : ℕ) :
+    (TateAlgebra K (Fin n) ⧸ (⊥ : Ideal (TateAlgebra K (Fin n)))) ≃ₐ[K]
+      TateAlgebra K (Fin n) :=
+  (AlgEquiv.ofBijective (Ideal.Quotient.mkₐ K ⊥)
+    (tateAlgebraQuotientMk_bijective K n)).symm
+
+/-- The tautological presentation of a Tate algebra as the quotient by the zero ideal. -/
+noncomputable def tateAlgebraPresentation (n : ℕ) :
+    AffinoidPresentation K (TateAlgebra K (Fin n)) where
+  n := n
+  ideal := ⊥
+  equiv := tateAlgebraQuotientEquiv K n
 
 /-- A Tate algebra in finitely many variables is affinoid. -/
 theorem tateAlgebra_isAffinoid (n : ℕ) :
     IsAffinoidAlgebra K (TateAlgebra K (Fin n)) :=
   ⟨tateAlgebraPresentation K n⟩
+
+@[simp]
+theorem tateAlgebraPresentation_toAlgHom (n : ℕ) :
+    (tateAlgebraPresentation K n).toAlgHom = AlgHom.id K (TateAlgebra K (Fin n)) := by
+  apply AlgHom.ext
+  intro x
+  change tateAlgebraQuotientEquiv K n (Ideal.Quotient.mk ⊥ x) = x
+  exact (AlgEquiv.ofBijective (Ideal.Quotient.mkₐ K ⊥)
+    (tateAlgebraQuotientMk_bijective K n)).symm_apply_apply x
+
+/-- Algebra homomorphisms from a finite Tate algebra into an affinoid algebra are determined by
+the Tate variables. Automatic continuity is essential here: this statement is false for arbitrary
+algebraic targets. -/
+theorem tateAlgebra_algHom_ext
+    {C : Type z} [CommRing C] [Algebra K C] (n : ℕ)
+    (R : AffinoidPresentation K C) (f g : TateAlgebra K (Fin n) →ₐ[K] C)
+    (h : ∀ i, f (tateVariable K (Fin n) i) = g (tateVariable K (Fin n) i)) :
+    f = g := by
+  letI : NormedCommRing C := R.residueNormedCommRing K C
+  letI : NormedAlgebra K C := R.residueNormedAlgebra K C
+  letI : CompleteSpace C := R.residueCompleteSpace K C
+  letI : IsUltrametricDist C := R.residueIsUltrametricDist K C
+  let P := tateAlgebraPresentation K n
+  let fc := P.continuousFromTate K R f
+  let gc := P.continuousFromTate K R g
+  have hx : ∀ i : Fin n, IsPowerBounded (fc (tateVariable K (Fin n) i)) := by
+    intro i
+    exact isPowerBounded_map_continuousAlgHom K fc
+      (isPowerBounded_of_norm_le_one (norm_tateVariable K _ i).le)
+  have hfg : fc = gc := by
+    apply (existsUnique_continuousAlgHom_of_isPowerBounded (K := K) _ hx).unique
+    · intro i
+      rfl
+    · intro i
+      change g (AffinoidPresentation.toAlgHom K (TateAlgebra K (Fin n))
+          (tateAlgebraPresentation K n)
+          (tateVariable K (Fin n) i)) =
+        f (AffinoidPresentation.toAlgHom K (TateAlgebra K (Fin n))
+          (tateAlgebraPresentation K n) (tateVariable K (Fin n) i))
+      rw [tateAlgebraPresentation_toAlgHom]
+      exact (h i).symm
+  apply (AlgHom.cancel_right (P.toAlgHom_surjective K _)).mp
+  exact congrArg ContinuousAlgHom.toAlgHom hfg
 
 /-- The continuous coordinate-block map from the left presentation. -/
 noncomputable def leftBlockContinuousMap (P : AffinoidPresentation K A)
